@@ -1,0 +1,20 @@
+body{
+  font-size: 13px;
+  color: #333;
+  margin: 0;
+  background-color: rgba(0,0,0,0.035);
+}
+
+body, h1,h2,h3,h4,h5{
+  font-family: Helvetica, "Helvetica Neue", sans-serif;
+}
+
+.UserSelectNone{
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
