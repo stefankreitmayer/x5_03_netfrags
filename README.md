@@ -7,7 +7,7 @@ User interface sketch for X5gon project
 Unlike [prototype 02](https://github.com/stefankreitmayer/x5_02_trays), this one focuses on the learner. There is no curator role. Instead, given a limited pool of OERs, the learner's profile is used to filter, organise, and sort recommendations. Recommendations can be entire OERs or fragments thereof.
 
 As a learner, when I go to the homepage I want to...
-- [ ] see a wide range of recommended items categorised in playlists with useful headings that explain the rationale why they were recommended
+- [x] see a wide range of recommended items categorised in playlists with useful headings that explain the rationale why they were recommended
 - [ ] mark an item as started, made progress, or done
 - [ ] see all the items that I have started working on
 - [ ] access a history of what I've done

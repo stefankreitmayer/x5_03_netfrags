@@ -7,11 +7,9 @@ import Model.Resource exposing (..)
 
 type Msg
   = ChangeSearchString String
-  | AddResourceToProject Resource
   | ShowDetails Resource
   | HideDetails Resource
   | ToggleItemDropmenu Resource
-  | RemoveResourceFromProject Resource
   | ToggleItemOptional Resource Bool
   | ChangeAnnotation Resource String String
   | DislikeResult String
@@ -20,8 +18,6 @@ type Msg
   | HoverRating (Rateable, Int)
   | UnHoverRating
   | EnterRating
-  -- | AddRelevantTag String
-  -- | RemoveRelevantTag String
 
 
 subscriptions : Model -> Sub Msg

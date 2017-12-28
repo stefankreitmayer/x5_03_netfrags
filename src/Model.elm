@@ -11,8 +11,7 @@ import Model.FakeData
 
 type alias Model =
   { ui : Ui
-  , searchResults : List Resource
-  , projectResources : List Resource
+  , playlists : List Playlist
   , expandedSearchResults : List String
   , itemDropmenu : Maybe Resource
   , optionalItems : Set String
@@ -28,11 +27,15 @@ type alias Rateable =
   (String, String)
 
 
+type alias Playlist =
+  { heading : String
+  , items : List Resource }
+
+
 initialModel : Model
 initialModel =
   { ui = initialUi
-  , searchResults = Model.FakeData.exampleResources
-  , projectResources = []
+  , playlists = Model.FakeData.exampleResources |> initialPlaylists
   , expandedSearchResults = []
   , itemDropmenu = Nothing
   , optionalItems = Set.empty
@@ -42,6 +45,22 @@ initialModel =
   , enteredRatings = Dict.empty
   , hoveringRating = Nothing
   , errorMsg = Nothing }
+
+
+initialPlaylists resources =
+  [ generatePlaylistFromTag resources "Videos" "video"
+  , generatePlaylistFromTag resources "Books" "book"
+  , generatePlaylistFromTag resources "Podcasts" "podcast"
+  , generatePlaylistFromTag resources "Courses" "course"
+  , generatePlaylistFromTag resources "Articles" "article"
+  , generatePlaylistFromTag resources "Meetups" "meetup group"
+  , generatePlaylistFromTag resources "Presentations" "presentation"
+  , generatePlaylistFromTag resources "Related to python" "python"
+  ]
+
+
+generatePlaylistFromTag resources heading tag =
+  Playlist heading (resources |> List.filter (\resource -> resource.tags |> Set.member tag))
 
 
 getAnnotation model resource name =

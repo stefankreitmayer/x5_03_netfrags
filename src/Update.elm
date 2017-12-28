@@ -25,9 +25,6 @@ update action oldModel =
         ChangeSearchString _ ->
           (model, Cmd.none)
 
-        AddResourceToProject resource ->
-          ({ model | projectResources = resource :: model.projectResources } |> annotationsFromFeatures resource, Cmd.none)
-
         ShowDetails resource ->
           ({ model | expandedSearchResults = resource.url :: model.expandedSearchResults}, Cmd.none)
 
@@ -39,9 +36,6 @@ update action oldModel =
               newState = if model.itemDropmenu == Just resource then Nothing else Just resource
           in
               ({ model | itemDropmenu = newState }, Cmd.none)
-
-        RemoveResourceFromProject resource ->
-          ({ model | projectResources = model.projectResources |> List.filter (\res -> not (res == resource)) }, Cmd.none)
 
         ToggleItemOptional resource checked ->
           let
@@ -63,7 +57,7 @@ update action oldModel =
 
 
         ConfirmDislike _ ->
-          ({ model | dislikedResult = Nothing, searchResults = model.searchResults |> List.filter (\r -> model.dislikedResult == Just r.url |> not) }, Cmd.none)
+          ({ model | dislikedResult = Nothing }, Cmd.none)
 
 
         HoverRating r ->
@@ -81,15 +75,6 @@ update action oldModel =
 
             Just (k, v) ->
               ({ model | hoveringRating = Nothing, enteredRatings = model.enteredRatings |> Dict.insert k v }, Cmd.none)
-
-
-        -- AddRelevantTag name ->
-        --   ({ model | relevantTags = model.relevantTags |> Set.insert name }, Cmd.none)
-
-
-        -- RemoveRelevantTag name ->
-        --   ({ model | relevantTags = model.relevantTags |> Set.remove name }, Cmd.none)
-
 
 
 closeDropmenu : Model -> Model
