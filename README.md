@@ -14,7 +14,7 @@ As a learner, when I go to the homepage I want to...
 - [ ] find a video podcast under either "videos" or "podcasts" or both; same for audio podcasts consistently
 
 As a learner, when I see a recommendation in a playlist...
-- [ ] in order to recognise the resource I want to see its title and image
+- [x] in order to recognise the resource I want to see its title and image
 - [ ] in order to improve future recommendations I want to mark the recommendation as helpful or unhelpful
 - [ ] if the item is about a fragment (rather than a whole resource), then I also want to see the exact time/page/paragraph range
 
@@ -26,6 +26,12 @@ As a learner, when I mark a recommendation as unhelpful...
 
 As a learner who cannot scroll horizontally...
 - [ ] I want to use buttons to see more playlist items than fit my screen
+
+As a learner who cannot mouseover...
+- [ ] I want to use buttons to show and hide item details
+
+As a learner, in order to feel motivated, when I mark an item as progressed or done...
+- [ ] I want to see a happy, fireworksy animation like in khan academy when I pass a quiz
 
 
 ## Mockup data
