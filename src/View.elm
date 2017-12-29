@@ -176,11 +176,11 @@ renderProject model =
 
 
 renderPlaylist : Model -> Playlist -> Element MyStyles variation Msg
-renderPlaylist model {heading, items} =
+renderPlaylist model ({heading, items} as playlist) =
   column PlaylistStyle [ paddingBottom 10 ]
   [ el PlaylistHeadingStyle [] (text heading)
   , items
-    |> List.map (renderItem model)
+    |> List.map (renderItem model playlist)
     |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
     |> List.singleton
     |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
@@ -188,29 +188,33 @@ renderPlaylist model {heading, items} =
 
 
 -- returns a Keyed element
-renderItem : Model -> Resource -> (String, Element MyStyles variation Msg)
-renderItem model resource =
+renderItem : Model -> Playlist -> Resource -> (String, Element MyStyles variation Msg)
+renderItem model playlist resource =
   let
-      element =
-        column ResourceStyle [ padding 10, spacing 10, maxWidth (px 220) ]
-          [ column NoStyle [ spacing 10 ]
-              [ decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
-                |> el NoStyle [ minHeight (px 106) ]
-              , column NoStyle [ spacing 3, width fill ]
-                [ paragraph ResourceTitleStyle [] [ text resource.title ]
-                , el HintStyle [ width fill ] (text resource.date)
-                -- , renderTagList resource
-                -- , renderItemDetails model resource
-                ]
-              -- , column NoStyle [ spacing 10 ]
-              --   [ decorativeImage EllipsisStyle [ width (px 20) ] { src = "images/icons/ellipsis.png" }
-              --     |> button NoStyle [ onClick (ToggleItemDropmenu resource), alignRight ]
-              --     |> renderItemDropmenu model resource
-              --     |> el NoStyle []
-              --   ]
-              ]
-            -- , renderItemAnnotations model resource
+      image =
+        decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
+        |> el NoStyle [ minHeight (px 106) ]
+      titleAndDate =
+        column NoStyle [ spacing 3, width fill ]
+          [ paragraph ResourceTitleStyle [] [ text resource.title ]
+          , el HintStyle [ width fill ] (text resource.date)
+          -- , renderTagList resource
+          -- , renderItemDetails model resource
           ]
+        -- , column NoStyle [ spacing 10 ]
+        --   [ decorativeImage EllipsisStyle [ width (px 20) ] { src = "images/icons/ellipsis.png" }
+        --     |> button NoStyle [ onClick (ToggleItemDropmenu resource), alignRight ]
+        --     |> renderItemDropmenu model resource
+        --     |> el NoStyle []
+        --   ]
+      details =
+        renderItemDetails model resource
+      children =
+        [ image, titleAndDate ] ++ (if model.selectedItem == Just (resource, playlist) then [ details ] else [])
+      element =
+        children
+        |> column NoStyle [ padding 10, spacing 10, maxWidth (px 220) ]
+        |> button ResourceStyle [ onClick (SelectItem resource playlist) ]
   in
       (resource.url, element)
 
@@ -227,6 +231,7 @@ renderTag str =
 
 
 renderItemDetails model resource =
+  -- column ItemDetailsStyle [ spacing 3 ]
   column NoStyle [ spacing 3 ]
     [ paragraph NoStyle [] [ text resource.url ] |> newTab resource.url ]
 

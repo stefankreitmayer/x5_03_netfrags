@@ -20,6 +20,7 @@ type alias Model =
   , dislikedResult : Maybe String
   , enteredRatings : Dict Rateable Int
   , hoveringRating : Maybe (Rateable, Int)
+  , selectedItem : Maybe (Resource, Playlist)
   , errorMsg : Maybe String }
 
 
@@ -44,6 +45,7 @@ initialModel =
   , dislikedResult = Nothing
   , enteredRatings = Dict.empty
   , hoveringRating = Nothing
+  , selectedItem = Nothing
   , errorMsg = Nothing }
 
 
