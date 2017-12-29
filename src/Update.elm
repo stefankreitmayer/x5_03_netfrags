@@ -22,8 +22,11 @@ update action oldModel =
             closeDropmenu oldModel
   in
       case action of
-        SelectItem resource playlist ->
+        InspectItem resource playlist ->
           ({ model | selectedItem = Just (resource, playlist)}, Cmd.none)
+
+        CloseItemInspector ->
+          ({ model | selectedItem = Nothing }, Cmd.none)
 
         ChangeSearchString _ ->
           (model, Cmd.none)

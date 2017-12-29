@@ -7,7 +7,8 @@ import Model.Resource exposing (..)
 
 type Msg
   = ChangeSearchString String
-  | SelectItem Resource Playlist
+  | InspectItem Resource Playlist
+  | CloseItemInspector
   | ShowDetails Resource
   | HideDetails Resource
   | ToggleItemDropmenu Resource

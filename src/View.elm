@@ -52,6 +52,8 @@ type MyStyles
   | StarStyle
   | StarHoverStyle
   | UrlStyle
+  | ItemInspectorStyle
+  | ItemInspectorImageStyle
 
 
 stylesheet =
@@ -125,7 +127,8 @@ stylesheet =
       , Border.all 1
       ]
     , Style.style CloseButtonStyle
-      [ Color.text <| Color.rgb 70 70 70
+      [ Color.text <| Color.rgb 100 100 100
+      , Font.weight 100
       ]
     , Style.style ModalityDistributionStyle
       [ Color.background <| Color.rgb 50 50 50
@@ -149,24 +152,35 @@ stylesheet =
     , Style.style UrlStyle
       [ Color.text <| Color.rgb 30 80 200
       ]
+    , Style.style ItemInspectorStyle
+      [ Color.text <| Color.rgb 30 80 200
+      , Color.border <| Color.rgb 100 100 100
+      , Color.background <| Color.rgb 255 255 255
+      , Border.all 1
+      , Shadow.simple
+      ]
+    , Style.style ItemInspectorImageStyle
+      [ Color.border <| Color.rgb 100 100 100
+      , Border.all 1
+      ]
     ]
 
 
 view : Model -> Html Msg
 view ({ui} as model) =
   viewport stylesheet <|
-  column NoStyle [ height fill ] [ renderPageHeader, renderPageBody model ]
+  column NoStyle [ height fill ] [ renderPageHeader model, renderPageBody model ]
 
 
-renderPageHeader =
+renderPageHeader model =
   row HeaderStyle [ padding 10, spacing 20 ]
     [ el NoStyle [] (text "x5gon") ]
+  |> below [ renderItemInspector model ]
 
 
 renderPageBody model =
-  column NoStyle [ height fill ]
-    [ renderProject model
-    ]
+  [ renderProject model ]
+  |> column NoStyle [ width fill, height fill, spacing 10, yScrollbar ]
 
 
 renderProject model =
@@ -180,7 +194,7 @@ renderPlaylist model ({heading, items} as playlist) =
   column PlaylistStyle [ paddingBottom 10 ]
   [ el PlaylistHeadingStyle [] (text heading)
   , items
-    |> List.map (renderItem model playlist)
+    |> List.map (renderPlaylistItem model playlist)
     |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
     |> List.singleton
     |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
@@ -188,8 +202,8 @@ renderPlaylist model ({heading, items} as playlist) =
 
 
 -- returns a Keyed element
-renderItem : Model -> Playlist -> Resource -> (String, Element MyStyles variation Msg)
-renderItem model playlist resource =
+renderPlaylistItem : Model -> Playlist -> Resource -> (String, Element MyStyles variation Msg)
+renderPlaylistItem model playlist resource =
   let
       image =
         decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
@@ -199,7 +213,6 @@ renderItem model playlist resource =
           [ paragraph ResourceTitleStyle [] [ text resource.title ]
           , el HintStyle [ width fill ] (text resource.date)
           -- , renderTagList resource
-          -- , renderItemDetails model resource
           ]
         -- , column NoStyle [ spacing 10 ]
         --   [ decorativeImage EllipsisStyle [ width (px 20) ] { src = "images/icons/ellipsis.png" }
@@ -207,14 +220,52 @@ renderItem model playlist resource =
         --     |> renderItemDropmenu model resource
         --     |> el NoStyle []
         --   ]
-      details =
-        renderItemDetails model resource
       children =
-        [ image, titleAndDate ] ++ (if model.selectedItem == Just (resource, playlist) then [ details ] else [])
+        [ image, titleAndDate ]
       element =
         children
         |> column NoStyle [ padding 10, spacing 10, maxWidth (px 220) ]
-        |> button ResourceStyle [ onClick (SelectItem resource playlist) ]
+        |> button ResourceStyle [ onClick (InspectItem resource playlist) ]
+  in
+      (resource.url, element)
+
+
+renderItemInspector model =
+  case model.selectedItem of
+    Nothing ->
+      (text "")
+      |> el ItemInspectorStyle [ hidden ]
+
+    Just (resource, _) ->
+      let
+          item =
+            renderInspectedItem model resource
+            |> List.singleton
+            |> Keyed.row NoStyle [ spacing 10 ]
+            |> el NoStyle []
+          closeButton =
+            button CloseButtonStyle [ onClick CloseItemInspector, alignLeft, padding 10 ] (text "×")
+      in
+          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (windowWidth - inspectorWidth + 2) ] [ closeButton, item ]
+
+
+-- returns a Keyed element
+renderInspectedItem : Model -> Resource -> (String, Element MyStyles variation Msg)
+renderInspectedItem model resource =
+  let
+      image =
+        decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
+        |> el NoStyle [ minHeight (px 212) ]
+      content =
+        column NoStyle [ spacing 3, width fill ]
+          [ h3 ResourceTitleStyle [] ( text resource.title )
+          , image
+          , el HintStyle [ width fill ] (text resource.date)
+          , renderItemDetails model resource
+          ]
+      element =
+        [ content ]
+        |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 10, spacing 10, maxWidth (px (inspectorWidth - 20)) ]
   in
       (resource.url, element)
 
@@ -231,9 +282,8 @@ renderTag str =
 
 
 renderItemDetails model resource =
-  -- column ItemDetailsStyle [ spacing 3 ]
-  column NoStyle [ spacing 3 ]
-    [ paragraph NoStyle [] [ text resource.url ] |> newTab resource.url ]
+  [ paragraph NoStyle [] [ text resource.url ] |> newTab resource.url ]
+  |> column NoStyle [ spacing 3 ]
 
 
 renderItemAnnotations model resource =
@@ -362,3 +412,9 @@ renderDislikeMenu =
 renderDislikeReasonOption reason =
   el NoStyle [] (text reason)
   |> button DislikeReasonStyle [ paddingXY 5 2, onClick (ConfirmDislike reason) ]
+
+
+inspectorWidth = 640
+
+
+windowWidth = 1440
