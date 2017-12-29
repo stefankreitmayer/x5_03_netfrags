@@ -83,6 +83,9 @@ update action oldModel =
               ({ model | hoveringRating = Nothing, enteredRatings = model.enteredRatings |> Dict.insert k v }, Cmd.none)
 
 
+        UpdateWindowSize {width} ->
+          ({ model | windowWidth = width }, Cmd.none)
+
 closeDropmenu : Model -> Model
 closeDropmenu model =
   { model | itemDropmenu = Nothing }

@@ -246,7 +246,7 @@ renderItemInspector model =
           closeButton =
             button CloseButtonStyle [ onClick CloseItemInspector, alignLeft, padding 10 ] (text "×")
       in
-          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (windowWidth - inspectorWidth + 2) ] [ closeButton, item ]
+          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (model.windowWidth - inspectorWidth + 2 |> toFloat) ] [ closeButton, item ]
 
 
 -- returns a Keyed element
@@ -415,6 +415,3 @@ renderDislikeReasonOption reason =
 
 
 inspectorWidth = 640
-
-
-windowWidth = 1440

@@ -1,5 +1,7 @@
 module Msg exposing (..)
 
+import Window
+
 import Model exposing (..)
 import Model.Ui exposing (..)
 import Model.Resource exposing (..)
@@ -20,8 +22,9 @@ type Msg
   | HoverRating (Rateable, Int)
   | UnHoverRating
   | EnterRating
+  | UpdateWindowSize Window.Size
 
 
 subscriptions : Model -> Sub Msg
 subscriptions {ui} =
-  [] |> Sub.batch
+  [ Window.resizes UpdateWindowSize ] |> Sub.batch

@@ -21,6 +21,7 @@ type alias Model =
   , enteredRatings : Dict Rateable Int
   , hoveringRating : Maybe (Rateable, Int)
   , selectedItem : Maybe (Resource, Playlist)
+  , windowWidth : Int
   , errorMsg : Maybe String }
 
 
@@ -46,6 +47,7 @@ initialModel =
   , enteredRatings = Dict.empty
   , hoveringRating = Nothing
   , selectedItem = Nothing
+  , windowWidth = 1440 -- overwritten by initial Task
   , errorMsg = Nothing }
 
 
