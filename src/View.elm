@@ -1,10 +1,12 @@
 module View exposing (view)
 
 import Html exposing (Html)
+import Html.Attributes
 import Color exposing (..)
 import Set exposing (Set)
 import Dict exposing (Dict)
 -- import Debug exposing (log)
+import Json.Encode
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
@@ -128,6 +130,7 @@ stylesheet =
       ]
     , Style.style CloseButtonStyle
       [ Color.text <| Color.rgb 100 100 100
+      , Color.background <| Color.white
       , Font.weight 100
       ]
     , Style.style ModalityDistributionStyle
@@ -255,8 +258,11 @@ renderInspectedItem : Model -> Resource -> (String, Element MyStyles variation M
 renderInspectedItem model resource =
   let
       image =
-        decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
-        |> el NoStyle [ minHeight (px 212) ]
+        if (resource.url |> String.contains "youtube.") && (resource.url |> String.contains "watch?v=") then
+          embeddedYoutubePlayer resource.url
+        else
+          decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
+          |> el NoStyle [ minHeight (px 212) ]
       startButton =
         if resource |> isItemStarted model then
           el HintStyle [ paddingXY 0 10 ] (text "Started")
@@ -272,10 +278,10 @@ renderInspectedItem model resource =
       buttons =
         row NoStyle [ spacing 10 ] [ startButton, completeButton ]
       content =
-        column NoStyle [ spacing 3, width fill ]
+        column NoStyle [ spacing 10, width fill ]
           [ h3 ResourceTitleStyle [] ( text resource.title )
           , image
-          , el HintStyle [ width fill ] (text resource.date)
+          , el HintStyle ([ width fill ] ++ (if resource.date == "" then [ hidden ] else [])) (text resource.date)
           , renderItemDetails model resource
           , buttons
           ]
@@ -431,3 +437,19 @@ renderDislikeReasonOption reason =
 
 
 inspectorWidth = 640
+
+
+embeddedYoutubePlayer url =
+  case url |> String.split "watch?v=" |> List.reverse |> List.head of
+    Nothing ->
+      el NoStyle [] (text "Could not play video")
+
+    Just id ->
+      Html.iframe
+      [ Html.Attributes.width 560
+      , Html.Attributes.height 315
+      , Html.Attributes.src ("https://www.youtube.com/embed/" ++ id)
+      , Html.Attributes.property "frameborder" (Json.Encode.string "0")
+      , Html.Attributes.property "allowfullscreen" (Json.Encode.string "true")
+      ] []
+      |> html
