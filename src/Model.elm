@@ -52,7 +52,8 @@ initialModel =
 
 
 initialPlaylists resources =
-  [ generatePlaylistFromTag resources "Videos" "video"
+  [ Playlist playlistHeadingStarted []
+  , generatePlaylistFromTag resources "Videos" "video"
   , generatePlaylistFromTag resources "Books" "book"
   , generatePlaylistFromTag resources "Podcasts" "podcast"
   , generatePlaylistFromTag resources "Courses" "course"
@@ -73,3 +74,30 @@ getAnnotation model resource name =
 
 itemAnnotation =
   [ attrTextWorkload, "My Comments" ]
+
+
+playlistHeadingStarted = "Started"
+
+
+startedItems model =
+  playlistHeadingStarted |> getPlaylistItems model
+
+
+getPlaylistItems : Model -> String -> List Resource
+getPlaylistItems model heading =
+  let
+      maybePlaylist =
+        model.playlists |> List.filter (\playlist -> playlist.heading == heading) |> List.head
+  in
+      case maybePlaylist of
+        Nothing ->
+          []
+
+        Just playlist ->
+          playlist.items
+
+
+modifyPlaylist : Model -> String -> List Resource -> List Playlist
+modifyPlaylist {playlists} heading newItems =
+  playlists
+  |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = newItems } else playlist)

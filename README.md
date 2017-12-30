@@ -8,10 +8,12 @@ Unlike [prototype 02](https://github.com/stefankreitmayer/x5_02_trays), this one
 
 As a learner, when I go to the homepage I want to...
 - [x] see a wide range of recommended items categorised in playlists with useful headings that explain the rationale why they were recommended
-- [ ] mark an item as started, made progress, or done
-- [ ] see all the items that I have started working on
+- [x] mark an item as started
+- [x] see all the items that I have started
+- [ ] mark an item as done
 - [ ] access a history of what I've done
 - [ ] find a video podcast under either "videos" or "podcasts" or both; same for audio podcasts consistently
+- [ ] see all the items that I have started but haven't touched in a while
 
 As a learner, when I see a recommendation in a playlist...
 - [x] in order to recognise the resource I want to see its title and image

@@ -57,22 +57,17 @@ update action oldModel =
         DislikeResult url ->
           ({ model | dislikedResult = Just url }, Cmd.none)
 
-
         RevokeDislike ->
           ({ model | dislikedResult = Nothing }, Cmd.none)
-
 
         ConfirmDislike _ ->
           ({ model | dislikedResult = Nothing }, Cmd.none)
 
-
         HoverRating r ->
           ({ model | hoveringRating = Just r }, Cmd.none)
 
-
         UnHoverRating ->
           ({ model | hoveringRating = Nothing }, Cmd.none)
-
 
         EnterRating ->
           case model.hoveringRating of
@@ -82,9 +77,12 @@ update action oldModel =
             Just (k, v) ->
               ({ model | hoveringRating = Nothing, enteredRatings = model.enteredRatings |> Dict.insert k v }, Cmd.none)
 
-
         UpdateWindowSize {width} ->
           ({ model | windowWidth = width }, Cmd.none)
+
+        StartItem resource ->
+          ({ model | playlists = modifyPlaylist model playlistHeadingStarted (resource :: (startedItems model)) }, Cmd.none)
+
 
 closeDropmenu : Model -> Model
 closeDropmenu model =

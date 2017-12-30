@@ -185,6 +185,7 @@ renderPageBody model =
 
 renderProject model =
   model.playlists
+  |> List.filter (\playlist -> playlist.items |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
   |> column ProjectStyle [ width fill, padding 10, spacing 10 ]
 
@@ -256,16 +257,22 @@ renderInspectedItem model resource =
       image =
         decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
         |> el NoStyle [ minHeight (px 212) ]
+      startButton =
+        if startedItems model |> List.member resource then
+          el HintStyle [ paddingXY 0 10 ] (text "Started")
+        else
+          button NoStyle [ onClick (StartItem resource), alignLeft, padding 10 ] (text "Start")
       content =
         column NoStyle [ spacing 3, width fill ]
           [ h3 ResourceTitleStyle [] ( text resource.title )
           , image
           , el HintStyle [ width fill ] (text resource.date)
           , renderItemDetails model resource
+          , startButton
           ]
       element =
         [ content ]
-        |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 10, spacing 10, maxWidth (px (inspectorWidth - 20)) ]
+        |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 5, spacing 10, maxWidth (px (inspectorWidth - 20)) ]
   in
       (resource.url, element)
 
