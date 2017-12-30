@@ -125,7 +125,13 @@ addToPlaylist heading item playlists =
   |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = (item :: playlist.items) } else playlist)
 
 
-removeFromPlaylist : String -> Resource -> List Playlist -> List Playlist
-removeFromPlaylist heading item playlists =
+-- removeFromPlaylist : String -> Resource -> List Playlist -> List Playlist
+-- removeFromPlaylist heading item playlists =
+--   playlists
+--   |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = List.filter (\i -> i == item |> not) playlist.items } else playlist)
+
+
+removeFromAllPlaylists : Resource -> List Playlist -> List Playlist
+removeFromAllPlaylists item playlists =
   playlists
-  |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = List.filter (\i -> i == item |> not) playlist.items } else playlist)
+  |> List.map (\playlist -> { playlist | items = List.filter (\i -> i == item |> not) playlist.items })

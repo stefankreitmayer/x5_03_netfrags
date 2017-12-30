@@ -80,11 +80,24 @@ update action oldModel =
         UpdateWindowSize {width} ->
           ({ model | windowWidth = width }, Cmd.none)
 
-        MarkItemAsStarted resource ->
-          ({ model | playlists = model.playlists |> addToPlaylist playlistHeadingStarted resource |> removeFromPlaylist playlistHeadingCompleted resource }, Cmd.none)
+        MarkItemAsStarted item ->
+          let
+              playlists =
+                model.playlists
+                |> removeFromAllPlaylists item
+                |> addToPlaylist playlistHeadingStarted item
+          in
+              ({ model | playlists = playlists }, Cmd.none)
 
-        MarkItemAsCompleted resource ->
-          ({ model | playlists = model.playlists |> addToPlaylist playlistHeadingCompleted resource |> removeFromPlaylist playlistHeadingStarted resource }, Cmd.none)
+        MarkItemAsCompleted item ->
+          let
+              playlists =
+                model.playlists
+                |> removeFromAllPlaylists item
+                |> addToPlaylist playlistHeadingCompleted item
+          in
+              ({ model | playlists = playlists }, Cmd.none)
+
 
 
 closeDropmenu : Model -> Model
