@@ -258,17 +258,26 @@ renderInspectedItem model resource =
         decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
         |> el NoStyle [ minHeight (px 212) ]
       startButton =
-        if startedItems model |> List.member resource then
+        if resource |> isItemStarted model then
           el HintStyle [ paddingXY 0 10 ] (text "Started")
+        else if resource |> isItemCompleted model then
+          el HintStyle [ hidden ] (text "")
         else
-          button NoStyle [ onClick (StartItem resource), alignLeft, padding 10 ] (text "Start")
+          button NoStyle [ onClick (MarkItemAsStarted resource), alignLeft, padding 10 ] (text "Start")
+      completeButton =
+        if completedItems model |> List.member resource then
+          el HintStyle [ paddingXY 0 10 ] (text "Completed")
+        else
+          button NoStyle [ onClick (MarkItemAsCompleted resource), alignLeft, padding 10 ] (text "Mark as completed")
+      buttons =
+        row NoStyle [ spacing 10 ] [ startButton, completeButton ]
       content =
         column NoStyle [ spacing 3, width fill ]
           [ h3 ResourceTitleStyle [] ( text resource.title )
           , image
           , el HintStyle [ width fill ] (text resource.date)
           , renderItemDetails model resource
-          , startButton
+          , buttons
           ]
       element =
         [ content ]

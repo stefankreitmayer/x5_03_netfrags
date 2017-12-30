@@ -80,8 +80,11 @@ update action oldModel =
         UpdateWindowSize {width} ->
           ({ model | windowWidth = width }, Cmd.none)
 
-        StartItem resource ->
-          ({ model | playlists = modifyPlaylist model playlistHeadingStarted (resource :: (startedItems model)) }, Cmd.none)
+        MarkItemAsStarted resource ->
+          ({ model | playlists = model.playlists |> addToPlaylist playlistHeadingStarted resource |> removeFromPlaylist playlistHeadingCompleted resource }, Cmd.none)
+
+        MarkItemAsCompleted resource ->
+          ({ model | playlists = model.playlists |> addToPlaylist playlistHeadingCompleted resource |> removeFromPlaylist playlistHeadingStarted resource }, Cmd.none)
 
 
 closeDropmenu : Model -> Model

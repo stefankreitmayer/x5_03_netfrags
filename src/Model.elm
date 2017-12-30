@@ -53,6 +53,7 @@ initialModel =
 
 initialPlaylists resources =
   [ Playlist playlistHeadingStarted []
+  , Playlist playlistHeadingCompleted []
   , generatePlaylistFromTag resources "Videos" "video"
   , generatePlaylistFromTag resources "Books" "book"
   , generatePlaylistFromTag resources "Podcasts" "podcast"
@@ -76,11 +77,26 @@ itemAnnotation =
   [ attrTextWorkload, "My Comments" ]
 
 
-playlistHeadingStarted = "Started"
+playlistHeadingStarted = "Started (continue learning)"
+
+
+playlistHeadingCompleted = "Done (congratulations)"
 
 
 startedItems model =
   playlistHeadingStarted |> getPlaylistItems model
+
+
+completedItems model =
+  playlistHeadingCompleted |> getPlaylistItems model
+
+
+isItemStarted model resource =
+  startedItems model |> List.member resource
+
+
+isItemCompleted model resource =
+  completedItems model |> List.member resource
 
 
 getPlaylistItems : Model -> String -> List Resource
@@ -97,7 +113,19 @@ getPlaylistItems model heading =
           playlist.items
 
 
-modifyPlaylist : Model -> String -> List Resource -> List Playlist
-modifyPlaylist {playlists} heading newItems =
+modifyPlaylist : String -> List Resource -> List Playlist -> List Playlist
+modifyPlaylist heading newItems playlists =
   playlists
   |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = newItems } else playlist)
+
+
+addToPlaylist : String -> Resource -> List Playlist -> List Playlist
+addToPlaylist heading item playlists =
+  playlists
+  |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = (item :: playlist.items) } else playlist)
+
+
+removeFromPlaylist : String -> Resource -> List Playlist -> List Playlist
+removeFromPlaylist heading item playlists =
+  playlists
+  |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = List.filter (\i -> i == item |> not) playlist.items } else playlist)

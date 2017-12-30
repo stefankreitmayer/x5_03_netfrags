@@ -23,7 +23,8 @@ type Msg
   | UnHoverRating
   | EnterRating
   | UpdateWindowSize Window.Size
-  | StartItem Resource
+  | MarkItemAsStarted Resource
+  | MarkItemAsCompleted Resource
 
 
 subscriptions : Model -> Sub Msg

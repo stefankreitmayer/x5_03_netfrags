@@ -10,8 +10,8 @@ As a learner, when I go to the homepage I want to...
 - [x] see a wide range of recommended items categorised in playlists with useful headings that explain the rationale why they were recommended
 - [x] mark an item as started
 - [x] see all the items that I have started
-- [ ] mark an item as done
-- [ ] access a history of what I've done
+- [x] mark an item as done
+- [x] see a history of what I've done
 - [ ] find a video podcast under either "videos" or "podcasts" or both; same for audio podcasts consistently
 - [ ] see all the items that I have started but haven't touched in a while
 
@@ -31,6 +31,9 @@ As a learner who cannot scroll horizontally...
 
 As a learner, in order to feel motivated, when I mark an item as progressed or done...
 - [ ] I want to see a happy, fireworksy animation like in khan academy when I pass a quiz
+
+As a learner, in order to benefit from peer motivation...
+- [ ] I want to share my progress with another person (not necessarily a user)
 
 
 ## Mockup data
