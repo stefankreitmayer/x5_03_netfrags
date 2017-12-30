@@ -52,8 +52,7 @@ initialModel =
 
 
 initialPlaylists resources =
-  [ Playlist playlistHeadingStarted []
-  , Playlist playlistHeadingCompleted []
+  [ Playlist playlistHeadingStarted (Model.FakeData.exampleResources |> List.reverse |> List.take 2)
   , generatePlaylistFromTag resources "Videos" "video"
   , generatePlaylistFromTag resources "Books" "book"
   , generatePlaylistFromTag resources "Podcasts" "podcast"
@@ -62,6 +61,7 @@ initialPlaylists resources =
   , generatePlaylistFromTag resources "Meetups" "meetup group"
   , generatePlaylistFromTag resources "Presentations" "presentation"
   , generatePlaylistFromTag resources "Related to python" "python"
+  , Playlist playlistHeadingCompleted []
   ]
 
 
@@ -77,7 +77,7 @@ itemAnnotation =
   [ attrTextWorkload, "My Comments" ]
 
 
-playlistHeadingStarted = "Started (continue learning)"
+playlistHeadingStarted = "Continue learning"
 
 
 playlistHeadingCompleted = "Done (congratulations)"

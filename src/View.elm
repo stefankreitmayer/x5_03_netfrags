@@ -56,6 +56,8 @@ type MyStyles
   | UrlStyle
   | ItemInspectorStyle
   | ItemInspectorImageStyle
+  | StartedPlaylistStyle
+  | StartedPlaylistHeadingStyle
 
 
 stylesheet =
@@ -166,6 +168,13 @@ stylesheet =
       [ Color.border <| Color.rgb 100 100 100
       , Border.all 1
       ]
+    , Style.style StartedPlaylistStyle
+      [ Color.background <| Color.rgb 38 57 73
+      ]
+    , Style.style StartedPlaylistHeadingStyle
+      [ Color.text <| Color.white
+      , Font.size 20
+      ]
     ]
 
 
@@ -190,19 +199,22 @@ renderProject model =
   model.playlists
   |> List.filter (\playlist -> playlist.items |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
-  |> column ProjectStyle [ width fill, padding 10, spacing 10 ]
+  |> column ProjectStyle [ width fill, spacing 10 ]
 
 
 renderPlaylist : Model -> Playlist -> Element MyStyles variation Msg
 renderPlaylist model ({heading, items} as playlist) =
-  column PlaylistStyle [ paddingBottom 10 ]
-  [ el PlaylistHeadingStyle [] (text heading)
-  , items
-    |> List.map (renderPlaylistItem model playlist)
-    |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
-    |> List.singleton
-    |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
-  ]
+  let
+      isStarted = heading == playlistHeadingStarted
+  in
+      column (if isStarted then StartedPlaylistStyle else PlaylistStyle) [ padding 10 ]
+      [ el (if isStarted then StartedPlaylistHeadingStyle else PlaylistHeadingStyle) [] (text heading)
+      , items
+        |> List.map (renderPlaylistItem model playlist)
+        |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
+        |> List.singleton
+        |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
+      ]
 
 
 -- returns a Keyed element
@@ -228,7 +240,7 @@ renderPlaylistItem model playlist resource =
         [ image, titleAndDate ]
       element =
         children
-        |> column NoStyle [ padding 10, spacing 10, maxWidth (px 220) ]
+        |> column (if playlist.heading == playlistHeadingCompleted then ThinvisibleStyle else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
         |> button ResourceStyle [ onClick (InspectItem resource playlist) ]
   in
       (resource.url, element)
