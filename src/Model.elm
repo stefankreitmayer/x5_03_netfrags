@@ -12,6 +12,8 @@ import Model.FakeData
 type alias Model =
   { ui : Ui
   , playlists : List Playlist
+  , startedItems : List Resource
+  , completedItems : List Resource
   , expandedSearchResults : List String
   , itemDropmenu : Maybe Resource
   , optionalItems : Set String
@@ -20,7 +22,7 @@ type alias Model =
   , dislikedResult : Maybe String
   , enteredRatings : Dict Rateable Int
   , hoveringRating : Maybe (Rateable, Int)
-  , selectedItem : Maybe (Resource, Playlist)
+  , selectedItem : Maybe Resource
   , windowWidth : Int
   , errorMsg : Maybe String }
 
@@ -38,6 +40,8 @@ initialModel : Model
 initialModel =
   { ui = initialUi
   , playlists = Model.FakeData.exampleResources |> initialPlaylists
+  , startedItems = Model.FakeData.exampleResources |> List.reverse |> List.take 2
+  , completedItems = []
   , expandedSearchResults = []
   , itemDropmenu = Nothing
   , optionalItems = Set.empty
@@ -52,8 +56,7 @@ initialModel =
 
 
 initialPlaylists resources =
-  [ Playlist playlistHeadingStarted (Model.FakeData.exampleResources |> List.reverse |> List.take 2)
-  , generatePlaylistFromTag resources "Videos" "video"
+  [ generatePlaylistFromTag resources "Videos" "video"
   , generatePlaylistFromTag resources "Books" "book"
   , generatePlaylistFromTag resources "Podcasts" "podcast"
   , generatePlaylistFromTag resources "Courses" "course"
@@ -61,7 +64,6 @@ initialPlaylists resources =
   , generatePlaylistFromTag resources "Meetups" "meetup group"
   , generatePlaylistFromTag resources "Presentations" "presentation"
   , generatePlaylistFromTag resources "Related to python" "python"
-  , Playlist playlistHeadingCompleted []
   ]
 
 
@@ -77,40 +79,12 @@ itemAnnotation =
   [ attrTextWorkload, "My Comments" ]
 
 
-playlistHeadingStarted = "Continue learning"
-
-
-playlistHeadingCompleted = "Done (congratulations)"
-
-
-startedItems model =
-  playlistHeadingStarted |> getPlaylistItems model
-
-
-completedItems model =
-  playlistHeadingCompleted |> getPlaylistItems model
-
-
 isItemStarted model resource =
-  startedItems model |> List.member resource
+  model.startedItems |> List.member resource
 
 
 isItemCompleted model resource =
-  completedItems model |> List.member resource
-
-
-getPlaylistItems : Model -> String -> List Resource
-getPlaylistItems model heading =
-  let
-      maybePlaylist =
-        model.playlists |> List.filter (\playlist -> playlist.heading == heading) |> List.head
-  in
-      case maybePlaylist of
-        Nothing ->
-          []
-
-        Just playlist ->
-          playlist.items
+  model.completedItems |> List.member resource
 
 
 modifyPlaylist : String -> List Resource -> List Playlist -> List Playlist
@@ -125,10 +99,17 @@ addToPlaylist heading item playlists =
   |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = (item :: playlist.items) } else playlist)
 
 
--- removeFromPlaylist : String -> Resource -> List Playlist -> List Playlist
--- removeFromPlaylist heading item playlists =
---   playlists
---   |> List.map (\playlist -> if playlist.heading == heading then { playlist | items = List.filter (\i -> i == item |> not) playlist.items } else playlist)
+removeFromList : a -> List a -> List a
+removeFromList item xs =
+  case xs of
+    [] ->
+      []
+
+    (x :: xs) ->
+      if x == item then
+        removeFromList item xs
+      else
+        x :: (removeFromList item xs)
 
 
 removeFromAllPlaylists : Resource -> List Playlist -> List Playlist

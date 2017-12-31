@@ -22,8 +22,8 @@ update action oldModel =
             closeDropmenu oldModel
   in
       case action of
-        InspectItem resource playlist ->
-          ({ model | selectedItem = Just (resource, playlist)}, Cmd.none)
+        InspectItem resource ->
+          ({ model | selectedItem = Just resource }, Cmd.none)
 
         CloseItemInspector ->
           ({ model | selectedItem = Nothing }, Cmd.none)
@@ -81,22 +81,14 @@ update action oldModel =
           ({ model | windowWidth = width }, Cmd.none)
 
         MarkItemAsStarted item ->
-          let
-              playlists =
-                model.playlists
-                |> removeFromAllPlaylists item
-                |> addToPlaylist playlistHeadingStarted item
-          in
-              ({ model | playlists = playlists }, Cmd.none)
+          ({ model | playlists = model.playlists |> removeFromAllPlaylists item
+                   , startedItems = item :: model.startedItems
+                   , completedItems = model.completedItems |> removeFromList item }, Cmd.none)
 
         MarkItemAsCompleted item ->
-          let
-              playlists =
-                model.playlists
-                |> removeFromAllPlaylists item
-                |> addToPlaylist playlistHeadingCompleted item
-          in
-              ({ model | playlists = playlists }, Cmd.none)
+          ({ model | playlists = model.playlists |> removeFromAllPlaylists item
+                   , completedItems = item :: model.completedItems
+                   , startedItems = model.startedItems |> removeFromList item }, Cmd.none)
 
 
 

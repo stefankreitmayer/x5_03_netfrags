@@ -33,15 +33,15 @@ type MyStyles
   | DebugStyle
   | InvisibleStyle
   | ThinvisibleStyle
+  | Opacity75Style
   | HeaderStyle
   | ResourceStyle
   | ResourceTitleStyle
   | HintStyle
-  | ProjectStyle
+  | ExploreSectionStyle
   | EllipsisStyle
   | AnnotationsStyle
   | AnnotationInputStyle
-  | PlaylistStyle
   | PlaylistHeadingStyle
   | H4Style
   | TagStyle
@@ -56,8 +56,11 @@ type MyStyles
   | UrlStyle
   | ItemInspectorStyle
   | ItemInspectorImageStyle
-  | StartedPlaylistStyle
-  | StartedPlaylistHeadingStyle
+  | StartedItemsSectionStyle
+  | StartedItemsHeadingStyle
+  | CompletedItemsSectionStyle
+  | CompletedItemsHeadingStyle
+  | ExploreHeadingStyle
 
 
 stylesheet =
@@ -72,6 +75,9 @@ stylesheet =
       ]
     , Style.style ThinvisibleStyle
       [ Style.opacity 0.2
+      ]
+    , Style.style Opacity75Style
+      [ Style.opacity 0.75
       ]
     , Style.style HeaderStyle
       [ Color.text <| Color.rgb 0 100 180
@@ -93,7 +99,7 @@ stylesheet =
     , Style.style HintStyle
       [ Color.text <| Color.rgb 120 120 120
       ]
-    , Style.style ProjectStyle
+    , Style.style ExploreSectionStyle
       [ Color.background <| Color.rgb 230 230 230
       ]
     , Style.style EllipsisStyle
@@ -109,9 +115,6 @@ stylesheet =
       [ Border.bottom 1
       , Color.border <| Color.rgb 200 200 200
       , Shadow.simple
-      ]
-    , Style.style PlaylistStyle
-      [
       ]
     , Style.style PlaylistHeadingStyle
       [ Color.text <| Color.rgb 40 40 40
@@ -168,12 +171,24 @@ stylesheet =
       [ Color.border <| Color.rgb 100 100 100
       , Border.all 1
       ]
-    , Style.style StartedPlaylistStyle
+    , Style.style StartedItemsSectionStyle
       [ Color.background <| Color.rgb 38 57 73
       ]
-    , Style.style StartedPlaylistHeadingStyle
+    , Style.style StartedItemsHeadingStyle
       [ Color.text <| Color.white
-      , Font.size 20
+      , Font.size sectionHeadingSize
+      ]
+    , Style.style CompletedItemsSectionStyle
+      [ Color.background <| Color.rgb 180 180 180
+      ]
+    , Style.style CompletedItemsHeadingStyle
+      [ Color.text <| Color.rgb 50 50 50
+      , Font.size sectionHeadingSize
+      ]
+    , Style.style ExploreHeadingStyle
+      [ Color.text <| Color.rgb 50 50 50
+      , Font.size sectionHeadingSize
+      , Font.weight 600
       ]
     ]
 
@@ -191,35 +206,63 @@ renderPageHeader model =
 
 
 renderPageBody model =
-  [ renderProject model ]
-  |> column NoStyle [ width fill, height fill, spacing 10, yScrollbar ]
+  [ renderStartedItemsSection model
+  , renderExploreSection model
+  , renderCompletedItemsSection model
+  ]
+  |> column NoStyle [ width fill, yScrollbar ]
 
 
-renderProject model =
+renderStartedItemsSection : Model -> Element MyStyles variation Msg
+renderStartedItemsSection ({startedItems} as model) =
+  column StartedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty startedItems then [ hidden ] else []))
+    [ el StartedItemsHeadingStyle [] (text "Continue learning")
+    , renderPlaylistItems model model.startedItems
+    ]
+
+
+renderCompletedItemsSection : Model -> Element MyStyles variation Msg
+renderCompletedItemsSection ({completedItems} as model) =
+  column CompletedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty completedItems then [ hidden ] else []))
+    -- [ el CompletedItemsHeadingStyle [] (text ("You have completed " ++ (items |> List.length |> toString) ++ " items"))
+    [ el CompletedItemsHeadingStyle [] (text "Your completed items")
+    , renderPlaylistItems model completedItems
+    ]
+
+
+renderExploreSection model =
+  [ h2 ExploreHeadingStyle [] (text (if (model.startedItems |> List.isEmpty) && (model.completedItems |> List.isEmpty) then "Start exploring!" else "Explore"))
+  , renderPlaylists model
+  ]
+  |> column ExploreSectionStyle [ width fill, padding 10, spacing 10 ]
+
+
+renderPlaylists model =
   model.playlists
   |> List.filter (\playlist -> playlist.items |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
-  |> column ProjectStyle [ width fill, spacing 10 ]
+  |> column NoStyle [ width fill, spacing 10 ]
 
 
 renderPlaylist : Model -> Playlist -> Element MyStyles variation Msg
 renderPlaylist model ({heading, items} as playlist) =
-  let
-      isStarted = heading == playlistHeadingStarted
-  in
-      column (if isStarted then StartedPlaylistStyle else PlaylistStyle) [ padding 10 ]
-      [ el (if isStarted then StartedPlaylistHeadingStyle else PlaylistHeadingStyle) [] (text heading)
-      , items
-        |> List.map (renderPlaylistItem model playlist)
-        |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
-        |> List.singleton
-        |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
-      ]
+  column NoStyle [ padding 10 ]
+  [ el PlaylistHeadingStyle [] (text heading)
+  , renderPlaylistItems model items
+  ]
+
+
+renderPlaylistItems model items =
+  items
+  |> List.map (renderPlaylistItem model)
+  |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
+  |> List.singleton
+  |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
 
 
 -- returns a Keyed element
-renderPlaylistItem : Model -> Playlist -> Resource -> (String, Element MyStyles variation Msg)
-renderPlaylistItem model playlist resource =
+renderPlaylistItem : Model -> Resource -> (String, Element MyStyles variation Msg)
+renderPlaylistItem model resource =
   let
       image =
         decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
@@ -240,8 +283,8 @@ renderPlaylistItem model playlist resource =
         [ image, titleAndDate ]
       element =
         children
-        |> column (if playlist.heading == playlistHeadingCompleted then ThinvisibleStyle else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
-        |> button ResourceStyle [ onClick (InspectItem resource playlist) ]
+        |> column (if model.completedItems |> List.member resource then Opacity75Style else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
+        |> button ResourceStyle [ onClick (InspectItem resource) ]
   in
       (resource.url, element)
 
@@ -252,7 +295,7 @@ renderItemInspector model =
       (text "")
       |> el ItemInspectorStyle [ hidden ]
 
-    Just (resource, _) ->
+    Just resource ->
       let
           item =
             renderInspectedItem model resource
@@ -283,7 +326,7 @@ renderInspectedItem model resource =
         else
           button NoStyle [ onClick (MarkItemAsStarted resource), alignLeft, padding 10 ] (text "Start")
       completeButton =
-        if completedItems model |> List.member resource then
+        if resource |> isItemCompleted model then
           el HintStyle [ paddingXY 0 10 ] (text "Completed")
         else
           button NoStyle [ onClick (MarkItemAsCompleted resource), alignLeft, padding 10 ] (text "Mark as completed")
@@ -465,3 +508,6 @@ embeddedYoutubePlayer url =
       , Html.Attributes.property "allowfullscreen" (Json.Encode.string "true")
       ] []
       |> html
+
+
+sectionHeadingSize = 20
