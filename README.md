@@ -14,7 +14,7 @@ As a learner, when I go to the homepage I want to...
 - [x] see a history of what I've done
 - [ ] find a video podcast under either "videos" or "podcasts" or both; same for audio podcasts consistently
 - [ ] see all the items that I have started but haven't touched in a while
-- [ ] see a happy greeting like "welcome back [my first name]" or something like that
+- [x] see a happy greeting like "welcome back [my first name]" or something like that
 
 As a learner, when I see a recommendation in a playlist...
 - [x] in order to recognise the resource I want to see its title and image

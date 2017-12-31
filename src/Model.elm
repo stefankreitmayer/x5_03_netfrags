@@ -24,6 +24,7 @@ type alias Model =
   , hoveringRating : Maybe (Rateable, Int)
   , selectedItem : Maybe Resource
   , windowWidth : Int
+  , windowHeight : Int
   , errorMsg : Maybe String }
 
 
@@ -52,6 +53,7 @@ initialModel =
   , hoveringRating = Nothing
   , selectedItem = Nothing
   , windowWidth = 1440 -- overwritten by initial Task
+  , windowHeight = 900 -- overwritten by initial Task
   , errorMsg = Nothing }
 
 

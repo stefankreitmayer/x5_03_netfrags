@@ -61,6 +61,8 @@ type MyStyles
   | CompletedItemsSectionStyle
   | CompletedItemsHeadingStyle
   | ExploreHeadingStyle
+  | GreetingSectionStyle
+  | GreetingHeadingStyle
 
 
 stylesheet =
@@ -190,6 +192,14 @@ stylesheet =
       , Font.size sectionHeadingSize
       , Font.weight 600
       ]
+    , Style.style GreetingSectionStyle
+      [ Color.background <| Color.rgb 93 135 172
+      ]
+    , Style.style GreetingHeadingStyle
+      [ Color.text <| Color.white
+      , Font.size 32
+      , Style.opacity 0.8
+      ]
     ]
 
 
@@ -206,11 +216,18 @@ renderPageHeader model =
 
 
 renderPageBody model =
-  [ renderStartedItemsSection model
+  [ renderGreetingSection model
+  , renderStartedItemsSection model
   , renderExploreSection model
   , renderCompletedItemsSection model
   ]
   |> column NoStyle [ width fill, yScrollbar ]
+
+
+renderGreetingSection model =
+  el GreetingHeadingStyle [ verticalCenter, center ] (text "Welcome back, Yvonne")
+  |> el GreetingSectionStyle [ height (model.windowHeight * 2 // 3 |> toFloat |> px) ]
+
 
 
 renderStartedItemsSection : Model -> Element MyStyles variation Msg

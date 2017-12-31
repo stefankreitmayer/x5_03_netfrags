@@ -77,8 +77,8 @@ update action oldModel =
             Just (k, v) ->
               ({ model | hoveringRating = Nothing, enteredRatings = model.enteredRatings |> Dict.insert k v }, Cmd.none)
 
-        UpdateWindowSize {width} ->
-          ({ model | windowWidth = width }, Cmd.none)
+        UpdateWindowSize {width, height} ->
+          ({ model | windowWidth = width, windowHeight = height }, Cmd.none)
 
         MarkItemAsStarted item ->
           ({ model | playlists = model.playlists |> removeFromAllPlaylists item
