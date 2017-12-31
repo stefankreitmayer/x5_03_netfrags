@@ -15,6 +15,9 @@ As a learner, when I go to the homepage I want to...
 - [ ] find a video podcast under either "videos" or "podcasts" or both; same for audio podcasts consistently
 - [ ] see all the items that I have started but haven't touched in a while
 - [x] see a happy greeting like "welcome back [my first name]" or something like that
+- [ ] switch to one of my other learning projects, e.g. fitness, rock climbing, tai chi, squash, comedy writing, etc
+- [ ] have a button next to each playlist allowing me to improve the recommendations
+- [ ] see a number of plants in pots (e.g. information, exercise, apply in practice) with their shapes indicating how recently I've attended each aspect, or whether I've been negligent.
 
 As a learner, when I see a recommendation in a playlist...
 - [x] in order to recognise the resource I want to see its title and image
@@ -24,6 +27,11 @@ As a learner, when I see a recommendation in a playlist...
 As a learner, when I select a recommendation from a playlist...
 - [x] in order to use the resource, I want to get a link to it (ideally to the specific play/text position if given)
 - [x] in order to use the resource conveniently, when the resource is a video I want to play it in an embedded player (ideally from the specific play position if given)
+- [x] in order to evaluate the resource, I want to see "what users said" (e.g. star rating table for funny, engaging, practical, etc.)
+- [x] in order to evaluate the resource, I want to see "what our algorithm thinks", i.e. why the item was recommended
+- [ ] in order to improve future recommendations, I want to give my own opinions about e.g. funny, engaging, practical, simple language, etc.
+- [ ] in order to improve future recommendations, I want to write a free text feedback comment
+- [ ] in order to improve future recommendations, I want to report a problem
 
 As a learner, when I mark a recommendation as unhelpful...
 - [ ] in order to improve future recommendations I want to state the reason, e.g. broken link, inaccurate, crap quality, doesn't fit my goals, doesn't fit my preferences, ...

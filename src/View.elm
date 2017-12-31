@@ -23,7 +23,7 @@ import Style.Shadow as Shadow
 import Model exposing (..)
 import Model.Ui exposing (..)
 import Model.Resource exposing (..)
-import Model.FakeData exposing (computeFakeRating, computeFakeNumberOfRatings, commonRatingMetrics)
+import Model.FakeData exposing (computeFakeRating, computeFakeNumberOfRatings, ratingsFromUsers, fakeRecommendationReasons)
 
 import Msg exposing (..)
 
@@ -35,6 +35,7 @@ type MyStyles
   | ThinvisibleStyle
   | Opacity75Style
   | HeaderStyle
+  | X5LogoStyle
   | ResourceStyle
   | ResourceTitleStyle
   | HintStyle
@@ -63,6 +64,10 @@ type MyStyles
   | ExploreHeadingStyle
   | GreetingSectionStyle
   | GreetingHeadingStyle
+  | InspectedRatingsHeadingStyle
+  | ItemInspectorProgressStyle
+  | NormalButtonStyle
+  | AgreeButtonStyle
 
 
 stylesheet =
@@ -82,11 +87,13 @@ stylesheet =
       [ Style.opacity 0.75
       ]
     , Style.style HeaderStyle
-      [ Color.text <| Color.rgb 0 100 180
-      , Color.background <| Color.white
-      , Color.border <| Color.rgb 100 100 100
-      , Font.weight 900
+      [ Color.background <| Color.white
+      , Color.border <| gray100
       , Border.bottom 1
+      ]
+    , Style.style X5LogoStyle
+      [ Color.text <| Color.rgb 0 100 180
+      , Font.weight 900
       ]
     , Style.style ResourceStyle
       [ Color.background <| Color.white
@@ -94,7 +101,7 @@ stylesheet =
       , Shadow.simple
       ]
     , Style.style ResourceTitleStyle
-      [ Color.text <| Color.rgb 50 50 50
+      [ Color.text <| gray50
       , Font.size 16
       , Font.weight 600
       ]
@@ -102,7 +109,7 @@ stylesheet =
       [ Color.text <| Color.rgb 120 120 120
       ]
     , Style.style ExploreSectionStyle
-      [ Color.background <| Color.rgb 230 230 230
+      [ Color.background <| gray230
       ]
     , Style.style EllipsisStyle
       [ Style.opacity 0.66
@@ -111,7 +118,7 @@ stylesheet =
       [ Border.top 1
       , Border.left 1
       , Color.border <| Color.rgb 200 200 200
-      , Color.background <| Color.rgb 230 230 230
+      , Color.background <| gray230
       ]
     , Style.style AnnotationInputStyle
       [ Border.bottom 1
@@ -132,16 +139,16 @@ stylesheet =
       [ Font.weight 600
       ]
     , Style.style AddButtonCircleStyle
-      [ Color.border <| Color.rgb 100 100 100
+      [ Color.border <| gray100
       , Border.all 1
       ]
     , Style.style CloseButtonStyle
-      [ Color.text <| Color.rgb 100 100 100
+      [ Color.text <| gray100
       , Color.background <| Color.white
       , Font.weight 100
       ]
     , Style.style ModalityDistributionStyle
-      [ Color.background <| Color.rgb 50 50 50
+      [ Color.background <| gray50
       ]
     , Style.style ModalityStylePresent
       [ Color.text <| Color.rgb 80 180 80
@@ -150,7 +157,7 @@ stylesheet =
       [ Color.text <| Color.rgb 180 180 180
       ]
     , Style.style DislikeReasonStyle
-      [ Color.border <| Color.rgb 100 100 100
+      [ Color.border <| gray100
       , Border.all 1
       ]
     , Style.style StarStyle
@@ -160,21 +167,22 @@ stylesheet =
       [ Style.opacity 0.5
       ]
     , Style.style UrlStyle
-      [ Color.text <| Color.rgb 30 80 200
+      -- [ Color.text <| Color.rgb 30 80 200
+      [ Color.text <| Color.rgb 0 100 180
+      , Font.weight 900
       ]
     , Style.style ItemInspectorStyle
-      [ Color.text <| Color.rgb 30 80 200
-      , Color.border <| Color.rgb 100 100 100
+      [ Color.border <| gray100
       , Color.background <| Color.rgb 255 255 255
       , Border.all 1
       , Shadow.simple
       ]
     , Style.style ItemInspectorImageStyle
-      [ Color.border <| Color.rgb 100 100 100
+      [ Color.border <| gray100
       , Border.all 1
       ]
     , Style.style StartedItemsSectionStyle
-      [ Color.background <| Color.rgb 38 57 73
+      [ Color.background <| colorStarted
       ]
     , Style.style StartedItemsHeadingStyle
       [ Color.text <| Color.white
@@ -184,11 +192,11 @@ stylesheet =
       [ Color.background <| Color.rgb 180 180 180
       ]
     , Style.style CompletedItemsHeadingStyle
-      [ Color.text <| Color.rgb 50 50 50
+      [ Color.text <| gray50
       , Font.size sectionHeadingSize
       ]
     , Style.style ExploreHeadingStyle
-      [ Color.text <| Color.rgb 50 50 50
+      [ Color.text <| gray50
       , Font.size sectionHeadingSize
       , Font.weight 600
       ]
@@ -200,8 +208,35 @@ stylesheet =
       , Font.size 32
       , Style.opacity 0.8
       ]
+    , Style.style ItemInspectorProgressStyle
+      [ Color.border <| gray100
+      -- , Color.background <| gray230
+      -- , Border.top 1
+      , Border.bottom 1
+      ]
+    , Style.style InspectedRatingsHeadingStyle
+      [ Color.text <| gray50
+      , Font.size 15
+      , Font.weight 600
+      ]
+    , Style.style NormalButtonStyle
+      [ Color.border <| gray100
+      , Border.all 1
+      ]
+    , Style.style AgreeButtonStyle
+      [ Color.border <| gray100
+      , Border.all 1
+      ]
     ]
 
+
+gray50 = Color.rgb 50 50 50
+
+gray100 = Color.rgb 100 100 100
+
+gray230 = Color.rgb 230 230 230
+
+colorStarted = Color.rgb 38 57 73
 
 view : Model -> Html Msg
 view ({ui} as model) =
@@ -211,7 +246,7 @@ view ({ui} as model) =
 
 renderPageHeader model =
   row HeaderStyle [ padding 10, spacing 20 ]
-    [ el NoStyle [] (text "x5gon") ]
+    [ el X5LogoStyle [] (text "x5gon") ]
   |> below [ renderItemInspector model ]
 
 
@@ -337,29 +372,35 @@ renderInspectedItem model resource =
           |> el NoStyle [ minHeight (px 212) ]
       startButton =
         if resource |> isItemStarted model then
-          el HintStyle [ paddingXY 0 10 ] (text "Started")
+          el HintStyle [ padding 10 ] (text "Started")
         else if resource |> isItemCompleted model then
           el HintStyle [ hidden ] (text "")
         else
-          button NoStyle [ onClick (MarkItemAsStarted resource), alignLeft, padding 10 ] (text "Start")
+          button NormalButtonStyle [ onClick (MarkItemAsStarted resource), paddingXY 12 10 ] (text "Start")
       completeButton =
         if resource |> isItemCompleted model then
           el HintStyle [ paddingXY 0 10 ] (text "Completed")
         else
-          button NoStyle [ onClick (MarkItemAsCompleted resource), alignLeft, padding 10 ] (text "Mark as completed")
-      buttons =
-        row NoStyle [ spacing 10 ] [ startButton, completeButton ]
+          button NormalButtonStyle [ onClick (MarkItemAsCompleted resource), paddingXY 12 10 ] (text "Mark as completed")
+      actionButtons =
+        row ItemInspectorProgressStyle [ padding 9, spacing 10 ] [ startButton, completeButton ]
+      ratingsAndRationale =
+        [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model resource ratingsFromUsers ]
+        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What our algorithm thought"), renderRecommendationReasons resource ]
+        ]
+        |> table NoStyle [ width fill, spacingXY 2 50 ]
       content =
         column NoStyle [ spacing 10, width fill ]
           [ h3 ResourceTitleStyle [] ( text resource.title )
           , image
           , el HintStyle ([ width fill ] ++ (if resource.date == "" then [ hidden ] else [])) (text resource.date)
           , renderItemDetails model resource
-          , buttons
+          , actionButtons
+          , ratingsAndRationale
           ]
       element =
         [ content ]
-        |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 5, spacing 10, maxWidth (px (inspectorWidth - 20)) ]
+        |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 10, spacing 10, width fill, maxWidth (px (inspectorWidth - 23)) ]
   in
       (resource.url, element)
 
@@ -376,78 +417,74 @@ renderTag str =
 
 
 renderItemDetails model resource =
-  [ paragraph NoStyle [] [ text resource.url ] |> newTab resource.url ]
+  [ paragraph UrlStyle [] [ text resource.url ] |> newTab resource.url ]
   |> column NoStyle [ spacing 3 ]
 
 
-renderItemAnnotations model resource =
-  let
-      renderAnnotationInput name =
-        Input.text AnnotationInputStyle (if name == attrTextWorkload then [ width (px 40) ] else [])
-          { onChange = ChangeAnnotation resource name
-          , value = getAnnotation model resource name
-          , label = Input.labelLeft <| el NoStyle [] (text name)
-          , options = []
-          }
-      renderAnnotation name =
-        if name == attrTextWorkload then
-          row NoStyle []
-          [ renderAnnotationInput name
-          , Input.checkbox NoStyle [ alignRight ]
-              { onChange = ToggleItemOptional resource
-              , checked = isItemOptional model resource
-              , label = el NoStyle [] (text "optional")
-              , options = []
-              }
-          ]
-        else
-          renderAnnotationInput name
-      ratingEditor =
-        renderRatingEditor model resource
-  in
-      column AnnotationsStyle [ spacing 3, padding 5 ]
-        ((itemAnnotation |> List.map renderAnnotation) ++ [ ratingEditor ])
+-- renderItemAnnotations model resource =
+--   let
+--       renderAnnotationInput name =
+--         Input.text AnnotationInputStyle (if name == attrTextWorkload then [ width (px 40) ] else [])
+--           { onChange = ChangeAnnotation resource name
+--           , value = getAnnotation model resource name
+--           , label = Input.labelLeft <| el NoStyle [] (text name)
+--           , options = []
+--           }
+--       renderAnnotation name =
+--         if name == attrTextWorkload then
+--           row NoStyle []
+--           [ renderAnnotationInput name
+--           , Input.checkbox NoStyle [ alignRight ]
+--               { onChange = ToggleItemOptional resource
+--               , checked = isItemOptional model resource
+--               , label = el NoStyle [] (text "optional")
+--               , options = []
+--               }
+--           ]
+--         else
+--           renderAnnotationInput name
+--       ratingEditor =
+--         renderRatingEditor model resource
+--   in
+--       column AnnotationsStyle [ spacing 3, padding 5 ]
+--         ((itemAnnotation |> List.map renderAnnotation) ++ [ ratingEditor ])
 
 
-renderRatingEditor model resource =
-  let
-      button =
-        row NoStyle [ spacing 6 ]
-          [ el NoStyle [] (text "My Ratings")
-          , decorativeImage NoStyle [ width (px 8), height (px 4) ] { src = "images/icons/triangle_down.svg" }
-            |> el NoStyle [ paddingTop 6]
-          ]
-      existinMetrics =
-        commonRatingMetrics
-        |> List.map (renderEditableRating model resource)
-        |> column NoStyle []
-  in
-      column NoStyle []
-        [ button
-        , existinMetrics ]
-
-
-renderEditableRating model resource metric =
-  let
-      rateable = (resource.url, metric)
-  in
-      row NoStyle [ spacing 5 ]
-        [ metric |> text |> el NoStyle [ alignRight ] |> el NoStyle [ width (percent 50)]
-        , renderStarGraphEditable model rateable ThinvisibleStyle (model.enteredRatings |> Dict.get rateable |> Maybe.withDefault 0)
-        ]
-
-
-renderRatings resource =
-  commonRatingMetrics
+renderRatingsColumn model resource ratings =
+  ratings
   |> List.map (renderRating resource)
-  |> column NoStyle []
+  |> (::) (button NormalButtonStyle [ paddingXY 12 10 ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
+  |> List.reverse
+  |> column NoStyle [ spacing 2 ]
+
+
+-- renderRatingEditor model resource =
+--   [ ratingsFromUsers, ratingsFromAlgorithm ]
+--   |> List.map (renderEditableRating model resource)
+--   |> column NoStyle []
+
+
+-- renderEditableRating model resource metric =
+--   let
+--       rateable = (resource.url, metric)
+--   in
+--       row NoStyle [ spacing 9 ]
+--         [ renderStarGraphEditable model rateable ThinvisibleStyle (model.enteredRatings |> Dict.get rateable |> Maybe.withDefault 0)
+--         , metric |> text |> el NoStyle [ ] |> el NoStyle [ width (percent 50)]
+--         ]
+
+
+-- renderRatings resource =
+--   commonRatingMetrics
+--   |> List.map (renderRating resource)
+--   |> column NoStyle []
 
 
 renderRating resource metric =
   row NoStyle [ spacing 5 ]
     [ renderStarGraphStatic InvisibleStyle (computeFakeRating resource metric)
     , metric |> text |> el NoStyle [ width fill ]
-    , (computeFakeNumberOfRatings resource metric |> toString) ++ " users" |> text |> el NoStyle []
+    -- , (computeFakeNumberOfRatings resource metric |> toString) ++ " users" |> text |> el NoStyle []
     ]
 
 
@@ -492,6 +529,22 @@ drawStar style events =
   |> el NoStyle (events ++ [ paddingXY 0 2 ])
 
 
+renderRecommendationReasons resource =
+  let
+      col1 =
+        fakeRecommendationReasons
+        |> List.map (\reason -> el NoStyle [ width fill ] (text reason) |> List.singleton |> paragraph NoStyle [ verticalCenter ] )
+      col2 =
+        fakeRecommendationReasons
+        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5 ] (text "Agree") |> el NoStyle [])
+      col3 =
+        fakeRecommendationReasons
+        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5 ] (text "Disagree") |> el NoStyle [])
+  in
+      [ col1, col2, col3 ]
+      |> table NoStyle [ spacing 3 ]
+
+
 renderDislikeMenu =
   column NoStyle [ spacing 10 ]
     [ paragraph ResourceTitleStyle [] [ text "Don't like this result? Tell us why - thanks!" ]
@@ -508,7 +561,7 @@ renderDislikeReasonOption reason =
   |> button DislikeReasonStyle [ paddingXY 5 2, onClick (ConfirmDislike reason) ]
 
 
-inspectorWidth = 640
+inspectorWidth = 600
 
 
 embeddedYoutubePlayer url =

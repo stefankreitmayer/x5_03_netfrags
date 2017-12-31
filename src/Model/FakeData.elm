@@ -52,5 +52,13 @@ computeFakeNumberOfRatings resource metric =
       (a * 2 + b * 3 + c*5 + d^2) % 150
 
 
-commonRatingMetrics =
-  [ "accurate", "up to date", "accessible", "entertaining", "child friendly", "interactive", "well reasoned", "well explained", "clear examples", "hilarious", "attractive", "addictive", "engaging", "math heavy", "correct grammar", "conversational" ]
+ratingsFromUsers =
+  -- [ "accurate", "up to date", "accessible", "entertaining", "child friendly", "interactive", "well reasoned", "well explained", "clear examples", "hilarious", "attractive", "addictive", "engaging", "math heavy", "correct grammar", "conversational" ]
+  [ "entertaining", "well explained", "engaging", "addictive" ]
+
+
+-- ratingsFromAlgorithm =
+--   [ "up to date", "child friendly", "math heavy", "practice oriented" ]
+
+fakeRecommendationReasons =
+  [ "This item explains linear regression", "You are interested in linear regression", "Understanding linear regression helps people understand random forests", "This item involves a practical exercise" ]
