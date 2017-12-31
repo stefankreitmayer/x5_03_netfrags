@@ -66,7 +66,8 @@ type MyStyles
   | GreetingHeadingStyle
   | InspectedRatingsHeadingStyle
   | ItemInspectorProgressStyle
-  | NormalButtonStyle
+  | WhiteButtonStyle
+  | BlueButtonStyle
   | AgreeButtonStyle
 
 
@@ -189,7 +190,7 @@ stylesheet =
       , Font.size sectionHeadingSize
       ]
     , Style.style CompletedItemsSectionStyle
-      [ Color.background <| Color.rgb 180 180 180
+      [ Color.background <| gray180
       ]
     , Style.style CompletedItemsHeadingStyle
       [ Color.text <| gray50
@@ -209,7 +210,7 @@ stylesheet =
       , Style.opacity 0.8
       ]
     , Style.style ItemInspectorProgressStyle
-      [ Color.border <| gray100
+      [ Color.border <| gray180
       -- , Color.background <| gray230
       -- , Border.top 1
       , Border.bottom 1
@@ -219,8 +220,14 @@ stylesheet =
       , Font.size 15
       , Font.weight 600
       ]
-    , Style.style NormalButtonStyle
+    , Style.style WhiteButtonStyle
       [ Color.border <| gray100
+      , Border.all 1
+      ]
+    , Style.style BlueButtonStyle
+      [ Color.border <| gray100
+      , Color.text <| Color.white
+      , Color.background <| Color.rgb 32 107 162
       , Border.all 1
       ]
     , Style.style AgreeButtonStyle
@@ -233,6 +240,8 @@ stylesheet =
 gray50 = Color.rgb 50 50 50
 
 gray100 = Color.rgb 100 100 100
+
+gray180 = Color.rgb 180 180 180
 
 gray230 = Color.rgb 230 230 230
 
@@ -364,6 +373,8 @@ renderItemInspector model =
 renderInspectedItem : Model -> Resource -> (String, Element MyStyles variation Msg)
 renderInspectedItem model resource =
   let
+      isStarted =
+        resource |> isItemStarted model
       image =
         if (resource.url |> String.contains "youtube.") && (resource.url |> String.contains "watch?v=") then
           embeddedYoutubePlayer resource.url
@@ -371,24 +382,24 @@ renderInspectedItem model resource =
           decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
           |> el NoStyle [ minHeight (px 212) ]
       startButton =
-        if resource |> isItemStarted model then
+        if isStarted then
           el HintStyle [ padding 10 ] (text "Started")
         else if resource |> isItemCompleted model then
           el HintStyle [ hidden ] (text "")
         else
-          button NormalButtonStyle [ onClick (MarkItemAsStarted resource), paddingXY 12 10 ] (text "Start")
+          button BlueButtonStyle [ onClick (MarkItemAsStarted resource), paddingXY 12 10 ] (text "Start")
       completeButton =
         if resource |> isItemCompleted model then
           el HintStyle [ paddingXY 0 10 ] (text "Completed")
         else
-          button NormalButtonStyle [ onClick (MarkItemAsCompleted resource), paddingXY 12 10 ] (text "Mark as completed")
+          button (if isStarted then BlueButtonStyle else WhiteButtonStyle) [ onClick (MarkItemAsCompleted resource), paddingXY 12 10 ] (text "Mark as completed")
       actionButtons =
-        row ItemInspectorProgressStyle [ padding 9, spacing 10 ] [ startButton, completeButton ]
+        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ startButton, completeButton ]
       ratingsAndRationale =
         [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model resource ratingsFromUsers ]
-        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What our algorithm thought"), renderRecommendationReasons resource ]
+        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons resource ]
         ]
-        |> table NoStyle [ width fill, spacingXY 2 50 ]
+        |> table NoStyle [ width fill, paddingTop 3, spacingXY 2 50 ]
       content =
         column NoStyle [ spacing 10, width fill ]
           [ h3 ResourceTitleStyle [] ( text resource.title )
@@ -453,7 +464,7 @@ renderItemDetails model resource =
 renderRatingsColumn model resource ratings =
   ratings
   |> List.map (renderRating resource)
-  |> (::) (button NormalButtonStyle [ paddingXY 12 10 ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
+  |> (::) (button WhiteButtonStyle [ paddingXY 12 10 ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
   |> List.reverse
   |> column NoStyle [ spacing 2 ]
 
