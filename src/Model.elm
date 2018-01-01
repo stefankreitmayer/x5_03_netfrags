@@ -15,19 +15,20 @@ type alias Model =
   , playlists : List Playlist
   , startedItems : List Resource
   , completedItems : List Resource
-  , expandedSearchResults : List String
+  , dislikedItems : List Resource
   , itemDropmenu : Maybe Resource
   , optionalItems : Set String
   , annotations : Dict (String, String) String
   , relevantTags : Set String
-  , dislikedResult : Maybe String
   , enteredRatings : Dict Rateable Int
   , hoveringRating : Maybe (Rateable, Int)
-  , selectedItem : Maybe Resource
+  , inspectedItem : Maybe Resource
+  , inspectorMode : InspectorMode
   , windowWidth : Int
   , windowHeight : Int
   , currentTime : Time
   , timeOfLastPopupTrigger : Time
+  , timeWhenSelectingReasonForDislikingItem : Time
   , errorMsg : Maybe String }
 
 
@@ -40,25 +41,32 @@ type alias Playlist =
   , items : List Resource }
 
 
+type InspectorMode
+  = ShowItem
+  | AskReasonForHidingItem
+  | ThanksForReasonForHidingItem
+
+
 initialModel : Model
 initialModel =
   { ui = initialUi
   , playlists = Model.FakeData.exampleResources |> initialPlaylists
   , startedItems = Model.FakeData.exampleResources |> List.reverse |> List.take 2
   , completedItems = []
-  , expandedSearchResults = []
+  , dislikedItems = []
   , itemDropmenu = Nothing
   , optionalItems = Set.empty
   , annotations = Dict.empty
   , relevantTags = Set.empty
-  , dislikedResult = Nothing
   , enteredRatings = Dict.empty
   , hoveringRating = Nothing
-  , selectedItem = Nothing
+  , inspectedItem = Nothing
+  , inspectorMode = ShowItem
   , windowWidth = 1440 -- overwritten by initial Task
   , windowHeight = 900 -- overwritten by initial Task
   , currentTime = 0 -- overwritten by subscription
   , timeOfLastPopupTrigger = -10000
+  , timeWhenSelectingReasonForDislikingItem = -10000
   , errorMsg = Nothing }
 
 
@@ -127,3 +135,8 @@ removeFromAllPlaylists item playlists =
 
 popupVisible model =
   model.currentTime < model.timeOfLastPopupTrigger + 1500
+
+
+withoutDislikedItems model items =
+  items
+  |> List.filter (\item -> model.dislikedItems |> List.member item |> not)

@@ -12,14 +12,11 @@ type Msg
   = ChangeSearchString String
   | InspectItem Resource
   | CloseItemInspector
-  | ShowDetails Resource
-  | HideDetails Resource
   | ToggleItemDropmenu Resource
   | ToggleItemOptional Resource Bool
-  | ChangeAnnotation Resource String String
-  | DislikeResult String
-  | RevokeDislike
-  | ConfirmDislike String
+  | DislikeItem Resource
+  | UndoDislikeItem Resource
+  | SelectReasonForHidingItem String
   | HoverRating (Rateable, Int)
   | UnHoverRating
   | EnterRating

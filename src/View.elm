@@ -51,7 +51,6 @@ type MyStyles
   | ModalityDistributionStyle
   | ModalityStylePresent
   | ModalityStyleNotPresent
-  | DislikeReasonStyle
   | StarStyle
   | StarHoverStyle
   | UrlStyle
@@ -158,10 +157,6 @@ stylesheet =
       ]
     , Style.style ModalityStyleNotPresent
       [ Color.text <| Color.rgb 180 180 180
-      ]
-    , Style.style DislikeReasonStyle
-      [ Color.border <| gray100
-      , Border.all 1
       ]
     , Style.style StarStyle
       [ Style.opacity 0.85
@@ -296,24 +291,29 @@ renderGreetingSection model =
 
 
 renderStartedItemsSection : Model -> Element MyStyles variation Msg
-renderStartedItemsSection ({startedItems} as model) =
-  column StartedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty startedItems then [ hidden ] else []))
-    [ el StartedItemsHeadingStyle [] (text "Continue learning")
-    , renderPlaylistItems model model.startedItems
-    ]
+renderStartedItemsSection model =
+  let
+      items = model.startedItems |> withoutDislikedItems model
+  in
+      column StartedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
+        [ el StartedItemsHeadingStyle [] (text "Continue learning")
+        , renderPlaylistItems model items
+        ]
 
 
 renderCompletedItemsSection : Model -> Element MyStyles variation Msg
-renderCompletedItemsSection ({completedItems} as model) =
-  column CompletedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty completedItems then [ hidden ] else []))
-    -- [ el CompletedItemsHeadingStyle [] (text ("You have completed " ++ (items |> List.length |> toString) ++ " items"))
-    [ el CompletedItemsHeadingStyle [] (text "Your completed items")
-    , renderPlaylistItems model completedItems
-    ]
+renderCompletedItemsSection model =
+  let
+      items = model.completedItems |> withoutDislikedItems model
+  in
+      column CompletedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
+        [ el CompletedItemsHeadingStyle [] (text "Your completed items")
+        , renderPlaylistItems model items
+        ]
 
 
 renderExploreSection model =
-  [ h2 ExploreHeadingStyle [] (text (if (model.startedItems |> List.isEmpty) && (model.completedItems |> List.isEmpty) then "Start exploring!" else "Explore"))
+  [ h2 ExploreHeadingStyle [] (text (if (model.startedItems |> withoutDislikedItems model |> List.isEmpty) && (model.completedItems |> withoutDislikedItems model |> List.isEmpty) then "Start exploring!" else "Explore"))
   , renderPlaylists model
   ]
   |> column ExploreSectionStyle [ width fill, padding 10, spacing 10 ]
@@ -321,7 +321,7 @@ renderExploreSection model =
 
 renderPlaylists model =
   model.playlists
-  |> List.filter (\playlist -> playlist.items |> List.isEmpty |> not)
+  |> List.filter (\playlist -> playlist.items |> withoutDislikedItems model |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
   |> column NoStyle [ width fill, spacing 10 ]
 
@@ -336,97 +336,124 @@ renderPlaylist model ({heading, items} as playlist) =
 
 renderPlaylistItems model items =
   items
+  |> withoutDislikedItems model
   |> List.map (renderPlaylistItem model)
   |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
   |> List.singleton
   |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
 
 
+renderPageable model items leftmostItemIndex =
+  let
+      prevButton =
+        if leftmostItemIndex > 0 then
+          button WhiteButtonStyle [ padding 10 ] (text "Prev")
+          |> el NoStyle []
+        else
+          el NoStyle [ padding 20 ] (text "")
+      nextButton =
+        button WhiteButtonStyle [ padding 10, verticalCenter, onClick (ChangePage TODO I think we should use a dict here key=heading, value=leftmostItemIndex) ] (text "Next")
+        |> el NoStyle []
+  in
+  [ prevButton, renderPageableItems model items leftmostItemIndex, nextButton ]
+  |> row NoStyle [ padding 30, spacing 15 ]
+
+
 -- returns a Keyed element
 renderPlaylistItem : Model -> Resource -> (String, Element MyStyles variation Msg)
-renderPlaylistItem model resource =
+renderPlaylistItem model item =
   let
       image =
-        decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
+        decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ item.coverImageStub ++ ".png" }
         |> el NoStyle [ minHeight (px 106) ]
       titleAndDate =
         column NoStyle [ spacing 3, width fill ]
-          [ paragraph ResourceTitleStyle [] [ text resource.title ]
-          , el HintStyle [ width fill ] (text resource.date)
-          -- , renderTagList resource
+          [ paragraph ResourceTitleStyle [] [ text item.title ]
+          , el HintStyle [ width fill ] (text item.date)
           ]
         -- , column NoStyle [ spacing 10 ]
         --   [ decorativeImage EllipsisStyle [ width (px 20) ] { src = "images/icons/ellipsis.png" }
-        --     |> button NoStyle [ onClick (ToggleItemDropmenu resource), alignRight ]
-        --     |> renderItemDropmenu model resource
+        --     |> button NoStyle [ onClick (ToggleItemDropmenu item), alignRight ]
+        --     |> renderItemDropmenu model item
         --     |> el NoStyle []
         --   ]
       children =
         [ image, titleAndDate ]
       element =
         children
-        |> column (if model.completedItems |> List.member resource then Opacity75Style else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
-        |> button ResourceStyle [ onClick (InspectItem resource) ]
+        |> column (if model.completedItems |> List.member item then Opacity75Style else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
+        |> button ResourceStyle [ onClick (InspectItem item) ]
   in
-      (resource.url, element)
+      (item.url, element)
 
 
 renderItemInspector model =
-  case model.selectedItem of
+  case model.inspectedItem of
     Nothing ->
       (text "")
       |> el ItemInspectorStyle [ hidden ]
 
-    Just resource ->
+    Just item ->
       let
-          item =
-            renderInspectedItem model resource
-            |> List.singleton
-            |> Keyed.row NoStyle [ spacing 10 ]
-            |> el NoStyle []
           closeButton =
             button CloseButtonStyle [ onClick CloseItemInspector, alignLeft, padding 10 ] (text "×")
+          content =
+            case model.inspectorMode of
+              ShowItem ->
+                renderInspectedItem model item
+                |> List.singleton
+                |> Keyed.row NoStyle [ spacing 10 ]
+                |> el NoStyle []
+
+              AskReasonForHidingItem ->
+                renderDislikeItemReasonsMenu item
+
+              ThanksForReasonForHidingItem ->
+                el ResourceTitleStyle [ center, verticalCenter ] (text "Thanks!")
+                |> el NoStyle [ height (px 220), paddingBottom 40 ]
       in
-          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (model.windowWidth - inspectorWidth + 2 |> toFloat) ] [ closeButton, item ]
+          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (model.windowWidth - inspectorWidth + 2 |> toFloat) ] [ closeButton, content ]
 
 
 -- returns a Keyed element
 renderInspectedItem : Model -> Resource -> (String, Element MyStyles variation Msg)
-renderInspectedItem model resource =
+renderInspectedItem model item =
   let
       isStarted =
-        resource |> isItemStarted model
+        item |> isItemStarted model
       image =
-        if (resource.url |> String.contains "youtube.") && (resource.url |> String.contains "watch?v=") then
-          embeddedYoutubePlayer resource.url
+        if (item.url |> String.contains "youtube.") && (item.url |> String.contains "watch?v=") then
+          embeddedYoutubePlayer item.url
         else
-          decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ resource.coverImageStub ++ ".png" }
+          decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ item.coverImageStub ++ ".png" }
           |> el NoStyle [ minHeight (px 212) ]
       startButton =
         if isStarted then
           el HintStyle [ padding 10 ] (text "Started")
-        else if resource |> isItemCompleted model then
+        else if item |> isItemCompleted model then
           el HintStyle [ hidden ] (text "")
         else
-          button BlueButtonStyle [ onClick (MarkItemAsStarted resource), paddingXY 12 10 ] (text "Start")
+          button BlueButtonStyle [ onClick (MarkItemAsStarted item), paddingXY 12 10 ] (text "Mark as started")
       completeButton =
-        if resource |> isItemCompleted model then
+        if item |> isItemCompleted model then
           el HintStyle [ paddingXY 0 10 ] (text "Completed")
         else
-          button (if isStarted then BlueButtonStyle else WhiteButtonStyle) [ onClick (MarkItemAsCompleted resource), paddingXY 12 10 ] (text "Mark as completed")
+          button (if isStarted then BlueButtonStyle else WhiteButtonStyle) [ onClick (MarkItemAsCompleted item), paddingXY 12 10 ] (text "Mark as completed")
+      dislikeButton =
+        button WhiteButtonStyle [ onClick (DislikeItem item), paddingXY 12 10 ] (text "Remove")
       actionButtons =
-        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ startButton, completeButton ]
+        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ startButton, completeButton, dislikeButton ]
       ratingsAndRationale =
-        [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model resource ratingsFromUsers ]
-        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons resource ]
+        [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model item ratingsFromUsers ]
+        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons item ]
         ]
         |> table NoStyle [ width fill, paddingTop 3, spacingXY 2 50 ]
       content =
         column NoStyle [ spacing 10, width fill ]
-          [ h3 ResourceTitleStyle [] ( text resource.title )
+          [ h3 ResourceTitleStyle [] ( text item.title )
           , image
-          , el HintStyle ([ width fill ] ++ (if resource.date == "" then [ hidden ] else [])) (text resource.date)
-          , renderItemDetails model resource
+          , el HintStyle ([ width fill ] ++ (if item.date == "" then [ hidden ] else [])) (text item.date)
+          , renderItemDetails model item
           , actionButtons
           , ratingsAndRationale
           ]
@@ -434,11 +461,11 @@ renderInspectedItem model resource =
         [ content ]
         |> column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 10, spacing 10, width fill, maxWidth (px (inspectorWidth - 23)) ]
   in
-      (resource.url, element)
+      (item.url, element)
 
 
-renderTagList resource =
-  resource.tags
+renderTagList item =
+  item.tags
   |> Set.toList
   |> List.map renderTag
   |> row NoStyle [ spacing 5 ]
@@ -448,57 +475,28 @@ renderTag str =
   el TagStyle [ paddingXY 2 1 ] (text str)
 
 
-renderItemDetails model resource =
-  [ paragraph UrlStyle [] [ text resource.url ] |> newTab resource.url ]
+renderItemDetails model item =
+  [ paragraph UrlStyle [] [ text item.url ] |> newTab item.url ]
   |> column NoStyle [ spacing 3 ]
 
 
--- renderItemAnnotations model resource =
---   let
---       renderAnnotationInput name =
---         Input.text AnnotationInputStyle (if name == attrTextWorkload then [ width (px 40) ] else [])
---           { onChange = ChangeAnnotation resource name
---           , value = getAnnotation model resource name
---           , label = Input.labelLeft <| el NoStyle [] (text name)
---           , options = []
---           }
---       renderAnnotation name =
---         if name == attrTextWorkload then
---           row NoStyle []
---           [ renderAnnotationInput name
---           , Input.checkbox NoStyle [ alignRight ]
---               { onChange = ToggleItemOptional resource
---               , checked = isItemOptional model resource
---               , label = el NoStyle [] (text "optional")
---               , options = []
---               }
---           ]
---         else
---           renderAnnotationInput name
---       ratingEditor =
---         renderRatingEditor model resource
---   in
---       column AnnotationsStyle [ spacing 3, padding 5 ]
---         ((itemAnnotation |> List.map renderAnnotation) ++ [ ratingEditor ])
-
-
-renderRatingsColumn model resource ratings =
+renderRatingsColumn model item ratings =
   ratings
-  |> List.map (renderRating resource)
+  |> List.map (renderRating item)
   |> (::) (button WhiteButtonStyle [ paddingXY 12 10, onClick UnimplementedAction ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
   |> List.reverse
   |> column NoStyle [ spacing 2 ]
 
 
--- renderRatingEditor model resource =
+-- renderRatingEditor model item =
 --   [ ratingsFromUsers, ratingsFromAlgorithm ]
---   |> List.map (renderEditableRating model resource)
+--   |> List.map (renderEditableRating model item)
 --   |> column NoStyle []
 
 
--- renderEditableRating model resource metric =
+-- renderEditableRating model item metric =
 --   let
---       rateable = (resource.url, metric)
+--       rateable = (item.url, metric)
 --   in
 --       row NoStyle [ spacing 9 ]
 --         [ renderStarGraphEditable model rateable ThinvisibleStyle (model.enteredRatings |> Dict.get rateable |> Maybe.withDefault 0)
@@ -506,17 +504,17 @@ renderRatingsColumn model resource ratings =
 --         ]
 
 
--- renderRatings resource =
+-- renderRatings item =
 --   commonRatingMetrics
---   |> List.map (renderRating resource)
+--   |> List.map (renderRating item)
 --   |> column NoStyle []
 
 
-renderRating resource metric =
+renderRating item metric =
   row NoStyle [ spacing 5 ]
-    [ renderStarGraphStatic InvisibleStyle (computeFakeRating resource metric)
+    [ renderStarGraphStatic InvisibleStyle (computeFakeRating item metric)
     , metric |> text |> el NoStyle [ width fill ]
-    -- , (computeFakeNumberOfRatings resource metric |> toString) ++ " users" |> text |> el NoStyle []
+    -- , (computeFakeNumberOfRatings item metric |> toString) ++ " users" |> text |> el NoStyle []
     ]
 
 
@@ -561,7 +559,7 @@ drawStar style events =
   |> el NoStyle (events ++ [ paddingXY 0 2 ])
 
 
-renderRecommendationReasons resource =
+renderRecommendationReasons item =
   let
       col1 =
         fakeRecommendationReasons
@@ -577,20 +575,21 @@ renderRecommendationReasons resource =
       |> table NoStyle [ spacing 3 ]
 
 
-renderDislikeMenu =
-  column NoStyle [ spacing 10 ]
-    [ paragraph ResourceTitleStyle [] [ text "Don't like this result? Tell us why - thanks!" ]
-    , [ "Not an OER", "Not trustworthy", "Low quality", "Doesn't fit my needs", "Doesn't fit my preferences", "Other reason" ]
-      |> List.map renderDislikeReasonOption
+renderDislikeItemReasonsMenu item =
+  column NoStyle [ paddingLeft 10, paddingRight 10, paddingBottom 10, spacing 10 ]
+    [ paragraph ResourceTitleStyle [] [ text "You won't see this item anymore. Please give feedback" ]
+    , [ "Didn't fit my needs", "Didn't fit my preferences", "Not an open educational resource", "Not trustworthy", "Low quality", "Other reason" ]
+      |> List.map renderReasonOptionForHidingItem
       |> column NoStyle [ spacing 5 ]
-    , el NoStyle [] (text "Never mind, it's fine")
-      |> button HintStyle [ onClick RevokeDislike ]
+    , el NoStyle [] (text "Undo")
+      |> button HintStyle [ onClick (UndoDislikeItem item) ]
     ]
 
 
-renderDislikeReasonOption reason =
+renderReasonOptionForHidingItem reason =
   el NoStyle [] (text reason)
-  |> button DislikeReasonStyle [ paddingXY 5 2, onClick (ConfirmDislike reason) ]
+  |> button WhiteButtonStyle [ paddingXY 12 10, onClick (SelectReasonForHidingItem reason) ]
+  |> el NoStyle []
 
 
 inspectorWidth = 600

@@ -23,19 +23,13 @@ update action oldModel =
   in
       case action of
         InspectItem resource ->
-          ({ model | selectedItem = Just resource }, Cmd.none)
+          ({ model | inspectedItem = Just resource, inspectorMode = ShowItem }, Cmd.none)
 
         CloseItemInspector ->
-          ({ model | selectedItem = Nothing }, Cmd.none)
+          ({ model | inspectedItem = Nothing, inspectorMode = ShowItem }, Cmd.none)
 
         ChangeSearchString _ ->
           (model, Cmd.none)
-
-        ShowDetails resource ->
-          ({ model | expandedSearchResults = resource.url :: model.expandedSearchResults}, Cmd.none)
-
-        HideDetails resource ->
-          ({ model | expandedSearchResults = model.expandedSearchResults |> List.filter (\url -> not (url == resource.url))}, Cmd.none)
 
         ToggleItemDropmenu resource ->
           let
@@ -50,18 +44,16 @@ update action oldModel =
           in
               ({ model | optionalItems = optionalItems }, Cmd.none)
 
-        ChangeAnnotation resource name value ->
-          ({ model | annotations = model.annotations |> Dict.insert (resource.url, name) value }, Cmd.none)
+        DislikeItem item ->
+          ({ model | inspectorMode = AskReasonForHidingItem
+                   , dislikedItems = item :: model.dislikedItems }, Cmd.none)
 
+        UndoDislikeItem item ->
+          ({ model | dislikedItems = model.dislikedItems |> removeFromList item
+                   , inspectorMode = ShowItem }, Cmd.none)
 
-        DislikeResult url ->
-          ({ model | dislikedResult = Just url }, Cmd.none)
-
-        RevokeDislike ->
-          ({ model | dislikedResult = Nothing }, Cmd.none)
-
-        ConfirmDislike _ ->
-          ({ model | dislikedResult = Nothing }, Cmd.none)
+        SelectReasonForHidingItem _ ->
+          ({ model | inspectorMode = ThanksForReasonForHidingItem, timeWhenSelectingReasonForDislikingItem = model.currentTime }, Cmd.none)
 
         HoverRating r ->
           ({ model | hoveringRating = Just r }, Cmd.none)
@@ -91,7 +83,7 @@ update action oldModel =
                    , startedItems = model.startedItems |> removeFromList item }, Cmd.none)
 
         Tick currentTime ->
-          ({ model | currentTime = currentTime }, Cmd.none)
+          ({ model | currentTime = currentTime } |> autoCloseInspectorAfterThanks, Cmd.none)
 
         UnimplementedAction ->
           ({ model | timeOfLastPopupTrigger = model.currentTime }, Cmd.none)
@@ -116,3 +108,12 @@ annotationsFromFeatures resource model =
             |> Dict.insert (resource.url, attrTextWorkload) hours
   in
       { model | annotations = annotations }
+
+
+autoCloseInspectorAfterThanks model =
+  if model.inspectorMode == ThanksForReasonForHidingItem && model.currentTime > model.timeWhenSelectingReasonForDislikingItem + 1200 then
+    { model
+    | inspectedItem = Nothing
+    , inspectorMode = ShowItem }
+  else
+    model
