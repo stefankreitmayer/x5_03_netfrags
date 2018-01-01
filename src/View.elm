@@ -610,6 +610,7 @@ embeddedYoutubePlayer url =
       , Html.Attributes.property "allowfullscreen" (Json.Encode.string "true")
       ] []
       |> html
+      |> el NoStyle []
 
 
 sectionHeadingSize = 20
