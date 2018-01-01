@@ -2,6 +2,7 @@ module Model exposing (..)
 
 import Set exposing (Set)
 import Dict exposing (Dict)
+import Time exposing (Time)
 import Element.Input as Input
 
 import Model.Ui exposing (..)
@@ -25,6 +26,8 @@ type alias Model =
   , selectedItem : Maybe Resource
   , windowWidth : Int
   , windowHeight : Int
+  , currentTime : Time
+  , timeOfLastPopupTrigger : Time
   , errorMsg : Maybe String }
 
 
@@ -54,6 +57,8 @@ initialModel =
   , selectedItem = Nothing
   , windowWidth = 1440 -- overwritten by initial Task
   , windowHeight = 900 -- overwritten by initial Task
+  , currentTime = 0 -- overwritten by subscription
+  , timeOfLastPopupTrigger = -10000
   , errorMsg = Nothing }
 
 
@@ -118,3 +123,7 @@ removeFromAllPlaylists : Resource -> List Playlist -> List Playlist
 removeFromAllPlaylists item playlists =
   playlists
   |> List.map (\playlist -> { playlist | items = List.filter (\i -> i == item |> not) playlist.items })
+
+
+popupVisible model =
+  model.currentTime < model.timeOfLastPopupTrigger + 1500

@@ -69,6 +69,8 @@ type MyStyles
   | WhiteButtonStyle
   | BlueButtonStyle
   | AgreeButtonStyle
+  | ModalOverlayStyle
+  | ModalTextStyle
 
 
 stylesheet =
@@ -234,6 +236,14 @@ stylesheet =
       [ Color.border <| gray100
       , Border.all 1
       ]
+    , Style.style ModalOverlayStyle
+      [ Color.background <| Color.black
+      , Style.opacity 0.75
+      ]
+    , Style.style ModalTextStyle
+      [ Color.text <| Color.white
+      , Font.size 24
+      ]
     ]
 
 
@@ -250,8 +260,19 @@ colorStarted = Color.rgb 38 57 73
 view : Model -> Html Msg
 view ({ui} as model) =
   viewport stylesheet <|
-  column NoStyle [ height fill ] [ renderPageHeader model, renderPageBody model ]
+  (column NoStyle [ height fill ] [ renderPageHeader model, renderPageBody model ]
+  |> above [ renderModal model ]
+  )
 
+
+renderModal model =
+ text "Not implemented"
+ |> el ModalTextStyle [ center, verticalCenter ]
+ |> el ModalOverlayStyle
+      ([ moveDown (model.windowHeight |> toFloat)
+      , width (model.windowWidth |> toFloat |> px)
+      , height (model.windowHeight |> toFloat |> px)
+      ] ++ (if popupVisible model then [] else [ hidden ]))
 
 renderPageHeader model =
   row HeaderStyle [ padding 10, spacing 20 ]
@@ -464,7 +485,7 @@ renderItemDetails model resource =
 renderRatingsColumn model resource ratings =
   ratings
   |> List.map (renderRating resource)
-  |> (::) (button WhiteButtonStyle [ paddingXY 12 10 ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
+  |> (::) (button WhiteButtonStyle [ paddingXY 12 10, onClick UnimplementedAction ] (text "Rate this item") |> el NoStyle [ paddingTop 10 ])
   |> List.reverse
   |> column NoStyle [ spacing 2 ]
 
@@ -547,10 +568,10 @@ renderRecommendationReasons resource =
         |> List.map (\reason -> el NoStyle [ width fill ] (text reason) |> List.singleton |> paragraph NoStyle [ verticalCenter ] )
       col2 =
         fakeRecommendationReasons
-        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5 ] (text "Agree") |> el NoStyle [])
+        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5, onClick UnimplementedAction ] (text "Agree") |> el NoStyle [])
       col3 =
         fakeRecommendationReasons
-        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5 ] (text "Disagree") |> el NoStyle [])
+        |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5, onClick UnimplementedAction ] (text "Disagree") |> el NoStyle [])
   in
       [ col1, col2, col3 ]
       |> table NoStyle [ spacing 3 ]

@@ -1,6 +1,7 @@
 module Msg exposing (..)
 
 import Window
+import Time exposing (Time)
 
 import Model exposing (..)
 import Model.Ui exposing (..)
@@ -25,8 +26,12 @@ type Msg
   | UpdateWindowSize Window.Size
   | MarkItemAsStarted Resource
   | MarkItemAsCompleted Resource
+  | Tick Time
+  | UnimplementedAction
 
 
 subscriptions : Model -> Sub Msg
 subscriptions {ui} =
-  [ Window.resizes UpdateWindowSize ] |> Sub.batch
+  [ Window.resizes UpdateWindowSize
+  , Time.every (100 * Time.millisecond) Tick
+  ] |> Sub.batch

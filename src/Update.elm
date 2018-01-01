@@ -90,6 +90,12 @@ update action oldModel =
                    , completedItems = item :: model.completedItems
                    , startedItems = model.startedItems |> removeFromList item }, Cmd.none)
 
+        Tick currentTime ->
+          ({ model | currentTime = currentTime }, Cmd.none)
+
+        UnimplementedAction ->
+          ({ model | timeOfLastPopupTrigger = model.currentTime }, Cmd.none)
+
 
 
 closeDropmenu : Model -> Model
