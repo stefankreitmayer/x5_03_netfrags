@@ -272,7 +272,7 @@ view ({ui} as model) =
 
 
 renderModal model =
- text "Not implemented in mockup"
+ text "Not implemented yet"
  |> el ModalTextStyle [ center, verticalCenter ]
  |> el ModalOverlayStyle
       ([ moveDown (model.windowHeight |> toFloat)
@@ -297,7 +297,7 @@ renderPageBody model =
 
 renderGreetingSection model =
   el GreetingHeadingStyle [ verticalCenter, center ] (text "Welcome back, Yvonne")
-  |> el GreetingSectionStyle [ height (model.windowHeight * 2 // 3 |> toFloat |> px) ]
+  |> el GreetingSectionStyle [ height (model.windowHeight - 370 |> toFloat |> px) ]
 
 
 
@@ -469,6 +469,14 @@ renderInspectedItem model item =
         button WhiteButtonStyle [ onClick (DislikeItem item), paddingXY 12 10 ] (text "Remove")
       actionButtons =
         row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ startButton, completeButton, dislikeButton ]
+      tooEasyButton =
+        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "Too easy for me")
+      tooDifficultButton =
+        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I could use some help with this")
+      adjournButton =
+        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I'll get back to this later")
+      difficultyButtons =
+        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ tooEasyButton, tooDifficultButton, adjournButton ]
       ratingsAndRationale =
         [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model item ratingsFromUsers ]
         , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons item ]
@@ -481,6 +489,7 @@ renderInspectedItem model item =
           , el HintStyle ([ width fill ] ++ (if item.date == "" then [ hidden ] else [])) (text item.date)
           , renderItemDetails model item
           , actionButtons
+          , difficultyButtons
           , ratingsAndRationale
           ]
       element =
@@ -589,7 +598,7 @@ renderRecommendationReasons item =
   let
       col1 =
         fakeRecommendationReasons
-        |> List.map (\reason -> el NoStyle [ width fill ] (text reason) |> List.singleton |> paragraph NoStyle [ verticalCenter ] )
+        |> List.map (\reason -> el NoStyle [ width fill ] (text ("“"++reason++".”")) |> List.singleton |> paragraph NoStyle [ verticalCenter ] )
       col2 =
         fakeRecommendationReasons
         |> List.map (\reason -> button AgreeButtonStyle [ verticalCenter, padding 5, onClick UnimplementedAction ] (text "Agree") |> el NoStyle [])
