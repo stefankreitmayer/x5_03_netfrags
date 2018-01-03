@@ -70,6 +70,7 @@ type MyStyles
   | AgreeButtonStyle
   | ModalOverlayStyle
   | ModalTextStyle
+  | MultilineInputStyle
 
 
 type Variation
@@ -249,6 +250,10 @@ stylesheet =
     , Style.style ModalTextStyle
       [ Color.text <| Color.white
       , Font.size 24
+      ]
+    , Style.style MultilineInputStyle
+      [ Color.border <| gray100
+      , Border.all 1
       ]
     ]
 
@@ -476,7 +481,17 @@ renderInspectedItem model item =
       adjournButton =
         button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I'll get back to this later")
       difficultyButtons =
-        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ tooEasyButton, tooDifficultButton, adjournButton ]
+        row NoStyle [ paddingTop 5, paddingBottom 0, spacing 10 ] [ tooEasyButton, tooDifficultButton, adjournButton ]
+      myNotes =
+        [ h3 InspectedRatingsHeadingStyle [] (text "Your notes")
+        , Input.multiline MultilineInputStyle [ padding 3 ]
+            { onChange = ChangeMyNotes item
+            , value = model.myNotesForItems |> Dict.get item.url |> Maybe.withDefault ""
+            , label = Input.labelAbove <| text ""
+            , options = []
+            }
+        ]
+        |> column NoStyle []
       ratingsAndRationale =
         [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model item ratingsFromUsers ]
         , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons item ]
@@ -491,6 +506,7 @@ renderInspectedItem model item =
           , actionButtons
           , difficultyButtons
           , ratingsAndRationale
+          , myNotes
           ]
       element =
         [ content ]

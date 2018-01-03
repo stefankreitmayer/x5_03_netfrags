@@ -24,6 +24,7 @@ type Msg
   | MarkItemAsStarted Resource
   | MarkItemAsCompleted Resource
   | ChangePageIndex String Int
+  | ChangeMyNotes Resource String
   | Tick Time
   | UnimplementedAction
 

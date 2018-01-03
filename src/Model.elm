@@ -16,6 +16,7 @@ type alias Model =
   , startedItems : List Resource
   , completedItems : List Resource
   , dislikedItems : List Resource
+  , myNotesForItems : Dict String String
   , itemDropmenu : Maybe Resource
   , optionalItems : Set String
   , annotations : Dict (String, String) String
@@ -55,6 +56,7 @@ initialModel =
   , startedItems = Model.FakeData.fakeStartedItems
   , completedItems = []
   , dislikedItems = []
+  , myNotesForItems = Dict.empty
   , itemDropmenu = Nothing
   , optionalItems = Set.empty
   , annotations = Dict.empty

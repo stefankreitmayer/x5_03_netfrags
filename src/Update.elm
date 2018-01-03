@@ -89,6 +89,9 @@ update action oldModel =
         ChangePageIndex heading newIndex ->
           ({ model | paginationIndices = model.paginationIndices |> Dict.insert heading newIndex }, Cmd.none)
 
+        ChangeMyNotes item str ->
+          ({ model | myNotesForItems = model.myNotesForItems |> Dict.insert item.url str }, Cmd.none)
+
         Tick currentTime ->
           ({ model | currentTime = currentTime } |> autoCloseInspectorAfterThanks, Cmd.none)
 
