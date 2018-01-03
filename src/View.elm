@@ -72,6 +72,10 @@ type MyStyles
   | ModalTextStyle
 
 
+type Variation
+  = Disabled
+  | LargeFont
+
 stylesheet =
   Style.styleSheet
     [ Style.style NoStyle []
@@ -220,6 +224,13 @@ stylesheet =
     , Style.style WhiteButtonStyle
       [ Color.border <| gray100
       , Border.all 1
+      , Style.variation Disabled
+        [-- Color.background Color.grey
+          Style.opacity 0.5
+        ]
+      , Style.variation LargeFont
+        [ Font.size 18
+        ]
       ]
     , Style.style BlueButtonStyle
       [ Color.border <| gray100
@@ -290,30 +301,32 @@ renderGreetingSection model =
 
 
 
-renderStartedItemsSection : Model -> Element MyStyles variation Msg
+renderStartedItemsSection : Model -> Element MyStyles Variation Msg
 renderStartedItemsSection model =
   let
-      items = model.startedItems |> withoutDislikedItems model
+      items = model.startedItems |> excludingDislikedItems model
+      heading = headingStartedItems
   in
       column StartedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
-        [ el StartedItemsHeadingStyle [] (text "Continue learning")
-        , renderPlaylistItems model items
+        [ el StartedItemsHeadingStyle [] (text heading)
+        , renderItemsWithPagination model heading items
         ]
 
 
-renderCompletedItemsSection : Model -> Element MyStyles variation Msg
+renderCompletedItemsSection : Model -> Element MyStyles Variation Msg
 renderCompletedItemsSection model =
   let
-      items = model.completedItems |> withoutDislikedItems model
+      items = model.completedItems |> excludingDislikedItems model
+      heading = headingCompletedItems
   in
       column CompletedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
-        [ el CompletedItemsHeadingStyle [] (text "Your completed items")
-        , renderPlaylistItems model items
+        [ el CompletedItemsHeadingStyle [] (text heading)
+        , renderItemsWithPagination model heading items
         ]
 
 
 renderExploreSection model =
-  [ h2 ExploreHeadingStyle [] (text (if (model.startedItems |> withoutDislikedItems model |> List.isEmpty) && (model.completedItems |> withoutDislikedItems model |> List.isEmpty) then "Start exploring!" else "Explore"))
+  [ h2 ExploreHeadingStyle [] (text "Explore")
   , renderPlaylists model
   ]
   |> column ExploreSectionStyle [ width fill, padding 10, spacing 10 ]
@@ -321,53 +334,66 @@ renderExploreSection model =
 
 renderPlaylists model =
   model.playlists
-  |> List.filter (\playlist -> playlist.items |> withoutDislikedItems model |> List.isEmpty |> not)
+  |> List.filter (\playlist -> playlist.items |> excludingDislikedItems model |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
   |> column NoStyle [ width fill, spacing 10 ]
 
 
-renderPlaylist : Model -> Playlist -> Element MyStyles variation Msg
-renderPlaylist model ({heading, items} as playlist) =
-  column NoStyle [ padding 10 ]
-  [ el PlaylistHeadingStyle [] (text heading)
-  , renderPlaylistItems model items
-  ]
-
-
-renderPlaylistItems model items =
-  items
-  |> withoutDislikedItems model
-  |> List.map (renderPlaylistItem model)
-  |> Keyed.row NoStyle [ width fill, height fill, spacing 10 ]
-  |> List.singleton
-  |> row NoStyle [ width fill, padding 10, spacing 10, xScrollbar ]
-
-
-renderPageable model items leftmostItemIndex =
+renderPlaylist : Model -> Playlist -> Element MyStyles Variation Msg
+renderPlaylist model ({heading} as playlist) =
   let
+      items =
+        playlist.items |> excludingDislikedItems model
+  in
+      column NoStyle [ padding 10 ]
+      [ el PlaylistHeadingStyle [] (text (heading ++ " (" ++ (List.length items |> toString) ++ ")"))
+      , renderItemsWithPagination model heading items
+      ]
+
+
+renderItemsWithPagination model heading allItems =
+  let
+      leftmostIndex =
+        paginationIndex model heading
+      nItems =
+        allItems |> List.length
+      itemsPart =
+        allItems
+        |> List.drop leftmostIndex
+        |> List.take (nItemsPerPage model)
+        |> List.map (renderPlaylistItem model)
+        |> Keyed.row NoStyle [ padding 10, spacing 10 ]
+      buttonStyles =
+        [ vary LargeFont True, paddingXY 15 10, verticalCenter ]
       prevButton =
-        if leftmostItemIndex > 0 then
-          button WhiteButtonStyle [ padding 10 ] (text "Prev")
+        if leftmostIndex > 0 then
+          button WhiteButtonStyle (buttonStyles ++ [ onClick (ChangePageIndex heading (leftmostIndex - (nItemsPerPage model) |> max 0)) ]) (text "‹")
+        else
+          el NoStyle [] (text "")
+      nextButton =
+        if nItems > leftmostIndex + (nItemsPerPage model) then
+          text "›"
+          |> button WhiteButtonStyle (buttonStyles ++ [ onClick (ChangePageIndex heading (leftmostIndex + (nItemsPerPage model))) ])
           |> el NoStyle []
         else
-          el NoStyle [ padding 20 ] (text "")
-      nextButton =
-        button WhiteButtonStyle [ padding 10, verticalCenter, onClick (ChangePage TODO I think we should use a dict here key=heading, value=leftmostItemIndex) ] (text "Next")
-        |> el NoStyle []
+          el NoStyle [] (text "")
   in
-  [ prevButton, renderPageableItems model items leftmostItemIndex, nextButton ]
-  |> row NoStyle [ padding 30, spacing 15 ]
+  [ prevButton |> el NoStyle [ width (px 40) ]
+  , itemsPart
+  , nextButton ]
+  |> row NoStyle [ paddingXY 0 30, spacing 15 ]
+
 
 
 -- returns a Keyed element
-renderPlaylistItem : Model -> Resource -> (String, Element MyStyles variation Msg)
+renderPlaylistItem : Model -> Resource -> (String, Element MyStyles Variation Msg)
 renderPlaylistItem model item =
   let
       image =
         decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ item.coverImageStub ++ ".png" }
         |> el NoStyle [ minHeight (px 106) ]
       titleAndDate =
-        column NoStyle [ spacing 3, width fill ]
+        column NoStyle [ spacing 3, width fill, minHeight (px 80) ]
           [ paragraph ResourceTitleStyle [] [ text item.title ]
           , el HintStyle [ width fill ] (text item.date)
           ]
@@ -416,7 +442,7 @@ renderItemInspector model =
 
 
 -- returns a Keyed element
-renderInspectedItem : Model -> Resource -> (String, Element MyStyles variation Msg)
+renderInspectedItem : Model -> Resource -> (String, Element MyStyles Variation Msg)
 renderInspectedItem model item =
   let
       isStarted =

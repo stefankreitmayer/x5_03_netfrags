@@ -26,6 +26,7 @@ type alias Model =
   , inspectorMode : InspectorMode
   , windowWidth : Int
   , windowHeight : Int
+  , paginationIndices : Dict String Int
   , currentTime : Time
   , timeOfLastPopupTrigger : Time
   , timeWhenSelectingReasonForDislikingItem : Time
@@ -64,6 +65,7 @@ initialModel =
   , inspectorMode = ShowItem
   , windowWidth = 1440 -- overwritten by initial Task
   , windowHeight = 900 -- overwritten by initial Task
+  , paginationIndices = Dict.empty
   , currentTime = 0 -- overwritten by subscription
   , timeOfLastPopupTrigger = -10000
   , timeWhenSelectingReasonForDislikingItem = -10000
@@ -137,6 +139,16 @@ popupVisible model =
   model.currentTime < model.timeOfLastPopupTrigger + 1500
 
 
-withoutDislikedItems model items =
+excludingDislikedItems model items =
   items
   |> List.filter (\item -> model.dislikedItems |> List.member item |> not)
+
+
+nItemsPerPage model =
+  (model.windowWidth - 200) // 240 |> max 1
+
+paginationIndex model heading =
+  model.paginationIndices |> Dict.get heading |> Maybe.withDefault 0
+
+headingStartedItems = "Continue learning"
+headingCompletedItems = "Your completed items"

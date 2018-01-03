@@ -23,6 +23,7 @@ type Msg
   | UpdateWindowSize Window.Size
   | MarkItemAsStarted Resource
   | MarkItemAsCompleted Resource
+  | ChangePageIndex String Int
   | Tick Time
   | UnimplementedAction
 

@@ -70,24 +70,30 @@ update action oldModel =
               ({ model | hoveringRating = Nothing, enteredRatings = model.enteredRatings |> Dict.insert k v }, Cmd.none)
 
         UpdateWindowSize {width, height} ->
-          ({ model | windowWidth = width, windowHeight = height }, Cmd.none)
+          ({ model | windowWidth = width
+                   , windowHeight = height
+                   , paginationIndices = Dict.empty }, Cmd.none)
 
         MarkItemAsStarted item ->
           ({ model | playlists = model.playlists |> removeFromAllPlaylists item
                    , startedItems = item :: model.startedItems
-                   , completedItems = model.completedItems |> removeFromList item }, Cmd.none)
+                   , completedItems = model.completedItems |> removeFromList item
+                   , paginationIndices = model.paginationIndices |> resetPaginationIndex headingStartedItems }, Cmd.none)
 
         MarkItemAsCompleted item ->
           ({ model | playlists = model.playlists |> removeFromAllPlaylists item
                    , completedItems = item :: model.completedItems
-                   , startedItems = model.startedItems |> removeFromList item }, Cmd.none)
+                   , startedItems = model.startedItems |> removeFromList item
+                   , paginationIndices = model.paginationIndices |> resetPaginationIndex headingCompletedItems }, Cmd.none)
+
+        ChangePageIndex heading newIndex ->
+          ({ model | paginationIndices = model.paginationIndices |> Dict.insert heading newIndex }, Cmd.none)
 
         Tick currentTime ->
           ({ model | currentTime = currentTime } |> autoCloseInspectorAfterThanks, Cmd.none)
 
         UnimplementedAction ->
           ({ model | timeOfLastPopupTrigger = model.currentTime }, Cmd.none)
-
 
 
 closeDropmenu : Model -> Model
@@ -117,3 +123,7 @@ autoCloseInspectorAfterThanks model =
     , inspectorMode = ShowItem }
   else
     model
+
+
+resetPaginationIndex heading paginationIndices =
+  paginationIndices |> Dict.insert heading 0
