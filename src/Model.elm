@@ -52,7 +52,7 @@ initialModel : Model
 initialModel =
   { ui = initialUi
   , playlists = Model.FakeData.exampleResources |> initialPlaylists
-  , startedItems = Model.FakeData.exampleResources |> List.reverse |> List.take 2
+  , startedItems = Model.FakeData.fakeStartedItems
   , completedItems = []
   , dislikedItems = []
   , itemDropmenu = Nothing

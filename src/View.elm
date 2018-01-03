@@ -272,7 +272,7 @@ view ({ui} as model) =
 
 
 renderModal model =
- text "Not implemented"
+ text "Not implemented in mockup"
  |> el ModalTextStyle [ center, verticalCenter ]
  |> el ModalOverlayStyle
       ([ moveDown (model.windowHeight |> toFloat)
@@ -307,7 +307,7 @@ renderStartedItemsSection model =
       items = model.startedItems |> excludingDislikedItems model
       heading = headingStartedItems
   in
-      column StartedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
+      column StartedItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
         [ el StartedItemsHeadingStyle [] (text heading)
         , renderItemsWithPagination model heading items
         ]
@@ -319,7 +319,7 @@ renderCompletedItemsSection model =
       items = model.completedItems |> excludingDislikedItems model
       heading = headingCompletedItems
   in
-      column CompletedItemsSectionStyle ([ padding 10 ] ++ (if List.isEmpty items then [ hidden ] else []))
+      column CompletedItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
         [ el CompletedItemsHeadingStyle [] (text heading)
         , renderItemsWithPagination model heading items
         ]
@@ -438,7 +438,7 @@ renderItemInspector model =
                 el ResourceTitleStyle [ center, verticalCenter ] (text "Thanks!")
                 |> el NoStyle [ height (px 220), paddingBottom 40 ]
       in
-          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (model.windowWidth - inspectorWidth + 2 |> toFloat) ] [ closeButton, content ]
+          column ItemInspectorStyle [ width (px inspectorWidth), moveRight (model.windowWidth - inspectorWidth - 9 |> toFloat) ] [ closeButton, content ]
 
 
 -- returns a Keyed element
