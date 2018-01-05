@@ -4,23 +4,32 @@ import Set exposing (Set)
 import Dict exposing (Dict)
 
 type alias Resource =
-  { title : String
+  { mediaType : String
+  , title : String
   , url : String
   , coverImageStub : String
   , date : String
   , tags : Set String
-  , features : Dict String String }
+  , features : Dict String String
+  , workload : Float }
 
 
-workloadInHours model resource =
-  if isItemOptional model resource then
-    0
-  else
-      model.annotations
-      |> Dict.get (resource.url, attrTextWorkload)
-      |> Maybe.withDefault "0.5"
-      |> String.toFloat
-      |> Result.withDefault 0.5
+workloadDisplayText {workload} =
+  let
+      minutes = workload * 60
+  in
+      if minutes < 20 then
+        (minutes |> ceiling |> toString) ++ "min"
+      else if minutes < 30 then
+        ((minutes / 5 |> ceiling) * 5 |> toString) ++ "min"
+      else if minutes < 50 then
+        ((minutes / 10 |> ceiling) * 10 |> toString) ++ "min"
+      else if minutes < 75 then
+        "1h"
+      else if minutes < 105 then
+        "1.5h"
+      else
+        (workload |> round |> toString) ++ "h"
 
 
 isItemOptional model resource =

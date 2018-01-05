@@ -27,6 +27,7 @@ import Model.Resource exposing (..)
 import Model.FakeData exposing (computeFakeRating, computeFakeNumberOfRatings, ratingsFromUsers, fakeRecommendationReasons)
 
 import Msg exposing (..)
+import Util exposing (..)
 
 
 type MyStyles
@@ -460,10 +461,10 @@ renderPlaylistItem model item =
       image =
         decorativeImage NoStyle [ width (px 200), maxHeight (px 106) ] { src = "images/resource_covers/" ++ item.coverImageStub ++ ".png" }
         |> el NoStyle [ minHeight (px 106) ]
-      titleAndDate =
+      titleAndInfo =
         column NoStyle [ spacing 3, width fill, minHeight (px 80) ]
-          [ paragraph ResourceTitleStyle [] [ text item.title ]
-          , el HintStyle [ width fill ] (text item.date)
+          [ paragraph ResourceTitleStyle [ height (px 75)] [ text item.title ]
+          , renderItemDateAndTypeAndWorkload model item
           ]
         -- , column NoStyle [ spacing 10 ]
         --   [ decorativeImage EllipsisStyle [ width (px 20) ] { src = "images/icons/ellipsis.png" }
@@ -472,7 +473,7 @@ renderPlaylistItem model item =
         --     |> el NoStyle []
         --   ]
       children =
-        [ image, titleAndDate ]
+        [ image, titleAndInfo ]
       element =
         children
         |> column (if model.completedItems |> List.member item then Opacity75Style else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
@@ -564,7 +565,8 @@ renderInspectedItem model item =
         column NoStyle [ spacing 10, width fill ]
           [ h3 ResourceTitleStyle [] ( text item.title )
           , image
-          , el HintStyle ([ width fill ] ++ (if item.date == "" then [ hidden ] else [])) (text item.date)
+          , renderItemDateAndTypeAndWorkload model item
+          -- , el HintStyle ([ width fill ] ++ (if item.date == "" then [ hidden ] else [])) (text item.date)
           , renderItemDetails model item
           , actionButtons
           , difficultyButtons
@@ -731,3 +733,11 @@ sectionHeadingSize = 20
 
 onClickStopPropagation message =
   onWithOptions "click" { stopPropagation = True, preventDefault = False } (Json.Decode.succeed message)
+
+
+renderItemDateAndTypeAndWorkload model item =
+  row NoStyle [ width fill ]
+    [ text (item.mediaType |> capitalize) |> el HintStyle [ width fill ]
+    , text (workloadDisplayText item) |> el HintStyle [ width fill ]
+    , text item.date |> el HintStyle [ width fill ]
+    ]

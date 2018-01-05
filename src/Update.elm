@@ -18,9 +18,13 @@ update action oldModel =
         case action of
           OpenInfoPopup _ ->
             oldModel
+          Tick _ ->
+            oldModel
           _ ->
             { oldModel
-            | itemDropmenu = Nothing }
+            | infoPopup = Nothing }
+      -- dummy =
+      --   action |> log "update action"
   in
       case action of
         InspectItem resource ->

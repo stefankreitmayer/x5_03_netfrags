@@ -77,19 +77,20 @@ initialModel =
 
 
 initialPlaylists resources =
-  [ generatePlaylistFromTag resources "Videos" "video"
-  , generatePlaylistFromTag resources "Books" "book"
-  , generatePlaylistFromTag resources "Podcasts" "podcast"
-  , generatePlaylistFromTag resources "Courses" "course"
-  , generatePlaylistFromTag resources "Articles" "article"
-  , generatePlaylistFromTag resources "Meetups" "meetup group"
-  , generatePlaylistFromTag resources "Presentations" "presentation"
-  , generatePlaylistFromTag resources "Related to python" "python"
+  [ generatePlaylistFromMediaType resources "Videos" "video"
+  , generatePlaylistFromMediaType resources "Books" "book"
+  , generatePlaylistFromMediaType resources "Podcasts" "podcast"
+  , generatePlaylistFromMediaType resources "Podcast episodes" "podcast episode"
+  , generatePlaylistFromMediaType resources "Courses" "course"
+  , generatePlaylistFromMediaType resources "Articles" "article"
+  , generatePlaylistFromMediaType resources "Meetups" "meetup group"
+  , generatePlaylistFromMediaType resources "Presentations" "presentation"
+  , generatePlaylistFromMediaType resources "Related to python" "python"
   ]
 
 
-generatePlaylistFromTag resources heading tag =
-  Playlist heading (resources |> List.filter (\resource -> resource.tags |> Set.member tag))
+generatePlaylistFromMediaType items heading mediaType =
+  Playlist heading (items |> List.filter (\item -> item.mediaType == mediaType))
 
 
 getAnnotation model resource name =
