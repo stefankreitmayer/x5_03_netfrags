@@ -7,10 +7,11 @@ import Set exposing (Set)
 import Dict exposing (Dict)
 -- import Debug exposing (log)
 import Json.Encode
+import Json.Decode
 
 import Element exposing (..)
 import Element.Attributes exposing (..)
-import Element.Events exposing (onClick, onCheck, onMouseOver, onMouseOut)
+import Element.Events exposing (onClick, onCheck, onMouseOver, onMouseOut, onWithOptions)
 import Element.Input as Input
 import Element.Keyed as Keyed
 
@@ -58,6 +59,8 @@ type MyStyles
   | ItemInspectorImageStyle
   | StartedItemsSectionStyle
   | StartedItemsHeadingStyle
+  | NextItemsSectionStyle
+  | NextItemsHeadingStyle
   | CompletedItemsSectionStyle
   | CompletedItemsHeadingStyle
   | ExploreHeadingStyle
@@ -71,6 +74,9 @@ type MyStyles
   | ModalOverlayStyle
   | ModalTextStyle
   | MultilineInputStyle
+  | InfoButtonStyle
+  | InfoPopupStyle
+  | TransparentBackgroundStyle
 
 
 type Variation
@@ -191,6 +197,13 @@ stylesheet =
       [ Color.text <| Color.white
       , Font.size sectionHeadingSize
       ]
+    , Style.style NextItemsSectionStyle
+      [ Color.background <| Color.rgb 21 31 40
+      ]
+    , Style.style NextItemsHeadingStyle
+      [ Color.text <| Color.white
+      , Font.size sectionHeadingSize
+      ]
     , Style.style CompletedItemsSectionStyle
       [ Color.background <| gray180
       ]
@@ -255,6 +268,21 @@ stylesheet =
       [ Color.border <| gray100
       , Border.all 1
       ]
+    , Style.style InfoButtonStyle
+      [ Color.text <| Color.white
+      , Color.border <| Color.white
+      , Border.all 2
+      ]
+    , Style.style InfoPopupStyle
+      [ Color.background <| Color.white
+      , Color.border <| gray100
+      , Color.text <| gray50
+      , Font.size 13
+      , Border.all 1
+      ]
+    , Style.style TransparentBackgroundStyle
+      [ Color.background <| Color.rgba 0 0 0 0
+      ]
     ]
 
 
@@ -294,10 +322,11 @@ renderPageHeader model =
 renderPageBody model =
   [ renderGreetingSection model
   , renderStartedItemsSection model
+  , renderNextItemsSection model
   , renderExploreSection model
   , renderCompletedItemsSection model
   ]
-  |> column NoStyle [ width fill, yScrollbar ]
+  |> column NoStyle [ width fill, yScrollbar, onClick ClickPageBody ]
 
 
 renderGreetingSection model =
@@ -309,11 +338,25 @@ renderGreetingSection model =
 renderStartedItemsSection : Model -> Element MyStyles Variation Msg
 renderStartedItemsSection model =
   let
-      items = model.startedItems |> excludingDislikedItems model
+      items = model.startedItems |> excludeDislikedItems model
       heading = headingStartedItems
   in
       column StartedItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
         [ el StartedItemsHeadingStyle [] (text heading)
+          |> onRight [ renderInfoButton model "These are the items you marked as started but haven't completed yet." ]
+        , renderItemsWithPagination model heading items
+        ]
+
+
+renderNextItemsSection : Model -> Element MyStyles Variation Msg
+renderNextItemsSection model =
+  let
+      items = nextItems model
+      heading = headingNextItems
+  in
+      column NextItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
+        [ el NextItemsHeadingStyle [] (text heading)
+          |> onRight [ renderInfoButton model "These are what the algorithm thinks you might want to check out next, based on your recently completed items, preferences, etc." ]
         , renderItemsWithPagination model heading items
         ]
 
@@ -321,14 +364,34 @@ renderStartedItemsSection model =
 renderCompletedItemsSection : Model -> Element MyStyles Variation Msg
 renderCompletedItemsSection model =
   let
-      items = model.completedItems |> excludingDislikedItems model
+      items = model.completedItems |> excludeDislikedItems model
       heading = headingCompletedItems
   in
       column CompletedItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
         [ el CompletedItemsHeadingStyle [] (text heading)
+          |> onRight [ renderInfoButton model "These are the items you marked as completed." ]
         , renderItemsWithPagination model heading items
         ]
 
+
+renderInfoButton model message =
+  let
+      popup =
+        case model.infoPopup of
+          Nothing ->
+              el NoStyle [ hidden ] (text "")
+
+          Just str ->
+            if str == message then
+              paragraph NoStyle [ width (px 300) ] [ text message ]
+              |> el InfoPopupStyle [ padding 10, moveDown 33, moveRight 38 ]
+            else
+              el NoStyle [ hidden ] (text "")
+  in
+      text "?"
+      |> circle 17 InfoButtonStyle [ paddingTop 5 ]
+      |> button TransparentBackgroundStyle [ moveLeft 40, onClickStopPropagation (OpenInfoPopup message) ]
+      |> onLeft [ popup ]
 
 renderExploreSection model =
   [ h2 ExploreHeadingStyle [] (text "Explore")
@@ -339,7 +402,7 @@ renderExploreSection model =
 
 renderPlaylists model =
   model.playlists
-  |> List.filter (\playlist -> playlist.items |> excludingDislikedItems model |> List.isEmpty |> not)
+  |> List.filter (\playlist -> playlist.items |> excludeDislikedItems model |> List.isEmpty |> not)
   |> List.map (renderPlaylist model)
   |> column NoStyle [ width fill, spacing 10 ]
 
@@ -348,7 +411,7 @@ renderPlaylist : Model -> Playlist -> Element MyStyles Variation Msg
 renderPlaylist model ({heading} as playlist) =
   let
       items =
-        playlist.items |> excludingDislikedItems model
+        playlist.items |> excludeDislikedItems model
   in
       column NoStyle [ padding 10 ]
       [ el PlaylistHeadingStyle [] (text (heading ++ " (" ++ (List.length items |> toString) ++ ")"))
@@ -413,7 +476,7 @@ renderPlaylistItem model item =
       element =
         children
         |> column (if model.completedItems |> List.member item then Opacity75Style else NoStyle) [ padding 10, spacing 10, maxWidth (px 220) ]
-        |> button ResourceStyle [ onClick (InspectItem item) ]
+        |> button ResourceStyle [ onClickStopPropagation (InspectItem item) ]
   in
       (item.url, element)
 
@@ -664,3 +727,7 @@ embeddedYoutubePlayer url =
 
 
 sectionHeadingSize = 20
+
+
+onClickStopPropagation message =
+  onWithOptions "click" { stopPropagation = True, preventDefault = False } (Json.Decode.succeed message)

@@ -28,6 +28,7 @@ type alias Model =
   , windowWidth : Int
   , windowHeight : Int
   , paginationIndices : Dict String Int
+  , infoPopup : Maybe String
   , currentTime : Time
   , timeOfLastPopupTrigger : Time
   , timeWhenSelectingReasonForDislikingItem : Time
@@ -68,6 +69,7 @@ initialModel =
   , windowWidth = 1440 -- overwritten by initial Task
   , windowHeight = 900 -- overwritten by initial Task
   , paginationIndices = Dict.empty
+  , infoPopup = Nothing
   , currentTime = 0 -- overwritten by subscription
   , timeOfLastPopupTrigger = -10000
   , timeWhenSelectingReasonForDislikingItem = -10000
@@ -141,9 +143,14 @@ popupVisible model =
   model.currentTime < model.timeOfLastPopupTrigger + 1500
 
 
-excludingDislikedItems model items =
+excludeDislikedItems model items =
   items
   |> List.filter (\item -> model.dislikedItems |> List.member item |> not)
+
+
+excludeItems itemsToExclude items =
+  items
+  |> List.filter (\item -> itemsToExclude |> List.member item |> not)
 
 
 nItemsPerPage model =
@@ -153,4 +160,14 @@ paginationIndex model heading =
   model.paginationIndices |> Dict.get heading |> Maybe.withDefault 0
 
 headingStartedItems = "Continue learning"
+headingNextItems = "Up next"
 headingCompletedItems = "Your completed items"
+
+
+nextItems model =
+  Model.FakeData.exampleResources
+  |> excludeItems model.startedItems
+  |> excludeItems model.completedItems
+  |> List.drop ((List.length model.startedItems) * 5) -- mockup: arbitrary pick from unstarted/uncompleted
+  |> List.drop ((List.length model.completedItems) * 5) -- mockup: arbitrary pick from unstarted/uncompleted
+  |> List.take 3

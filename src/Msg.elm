@@ -12,8 +12,8 @@ type Msg
   = ChangeSearchString String
   | InspectItem Resource
   | CloseItemInspector
-  | ToggleItemDropmenu Resource
-  | ToggleItemOptional Resource Bool
+  -- | ToggleItemDropmenu Resource
+  -- | ToggleItemOptional Resource Bool
   | DislikeItem Resource
   | UndoDislikeItem Resource
   | SelectReasonForHidingItem String
@@ -25,6 +25,8 @@ type Msg
   | MarkItemAsCompleted Resource
   | ChangePageIndex String Int
   | ChangeMyNotes Resource String
+  | ClickPageBody
+  | OpenInfoPopup String
   | Tick Time
   | UnimplementedAction
 

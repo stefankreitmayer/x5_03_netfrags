@@ -16,10 +16,11 @@ update action oldModel =
   let
       model =
         case action of
-          ToggleItemDropmenu _ ->
+          OpenInfoPopup _ ->
             oldModel
           _ ->
-            closeDropmenu oldModel
+            { oldModel
+            | itemDropmenu = Nothing }
   in
       case action of
         InspectItem resource ->
@@ -31,18 +32,18 @@ update action oldModel =
         ChangeSearchString _ ->
           (model, Cmd.none)
 
-        ToggleItemDropmenu resource ->
-          let
-              newState = if model.itemDropmenu == Just resource then Nothing else Just resource
-          in
-              ({ model | itemDropmenu = newState }, Cmd.none)
+        -- ToggleItemDropmenu resource ->
+        --   let
+        --       newState = if model.itemDropmenu == Just resource then Nothing else Just resource
+        --   in
+        --       ({ model | itemDropmenu = newState }, Cmd.none)
 
-        ToggleItemOptional resource checked ->
-          let
-              optionalItems =
-                model.optionalItems |> (if checked then Set.insert else Set.remove) resource.url
-          in
-              ({ model | optionalItems = optionalItems }, Cmd.none)
+        -- ToggleItemOptional resource checked ->
+        --   let
+        --       optionalItems =
+        --         model.optionalItems |> (if checked then Set.insert else Set.remove) resource.url
+        --   in
+        --       ({ model | optionalItems = optionalItems }, Cmd.none)
 
         DislikeItem item ->
           ({ model | inspectorMode = AskReasonForHidingItem
@@ -92,16 +93,17 @@ update action oldModel =
         ChangeMyNotes item str ->
           ({ model | myNotesForItems = model.myNotesForItems |> Dict.insert item.url str }, Cmd.none)
 
+        ClickPageBody ->
+          ({ model | infoPopup = Nothing } |> closeInspector, Cmd.none)
+
+        OpenInfoPopup message ->
+          ({ model | infoPopup = if model.infoPopup==Nothing then Just message else Nothing }, Cmd.none)
+
         Tick currentTime ->
-          ({ model | currentTime = currentTime } |> autoCloseInspectorAfterThanks, Cmd.none)
+          ({ model | currentTime = currentTime } |> autoCloseInspectorAfterThanks , Cmd.none)
 
         UnimplementedAction ->
           ({ model | timeOfLastPopupTrigger = model.currentTime }, Cmd.none)
-
-
-closeDropmenu : Model -> Model
-closeDropmenu model =
-  { model | itemDropmenu = Nothing }
 
 
 annotationsFromFeatures : Resource -> Model -> Model
@@ -121,12 +123,16 @@ annotationsFromFeatures resource model =
 
 autoCloseInspectorAfterThanks model =
   if model.inspectorMode == ThanksForReasonForHidingItem && model.currentTime > model.timeWhenSelectingReasonForDislikingItem + 1200 then
-    { model
-    | inspectedItem = Nothing
-    , inspectorMode = ShowItem }
+    model |> closeInspector
   else
     model
 
 
 resetPaginationIndex heading paginationIndices =
   paginationIndices |> Dict.insert heading 0
+
+
+closeInspector model =
+  { model
+  | inspectedItem = Nothing
+  , inspectorMode = ShowItem }
