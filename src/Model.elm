@@ -162,7 +162,7 @@ paginationIndex model heading =
 
 headingStartedItems = "Continue learning"
 headingNextItems = "Up next"
-headingCompletedItems = "Your completed items"
+headingCompletedItems = "Well done! You have completed "
 
 
 nextItems model =

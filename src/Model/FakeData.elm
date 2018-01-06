@@ -33,7 +33,7 @@ exampleResources =
   , Resource "video" "TensorFlow and Deep Learning without a PhD, Part 1 (Google Cloud Next '17)" "https://www.youtube.com/watch?v=u4alGiomYP4" "yout2" "" (Set.fromList [ "google" ]) (Dict.empty) 1
   , Resource "video" "Introduction to Data Analysis using Machine Learning" "https://www.youtube.com/watch?v=U4IYsLgNgoY" "yout3" "" (Set.fromList [ ]) (Dict.empty) 1
   , Resource "video" "Introduction - Learn Python for Data Science #1" "https://www.youtube.com/watch?v=T5pRlIbr6gg" "siraj" "" (Set.fromList [ "python" ]) (Dict.empty) 0.1
-  , Resource "podcast" "Machine Learning Guide" "http://ocdevel.com/podcasts/machine-learning" "ocdevel" "" (Set.fromList [ "entertaining", "downloadable", "audio" ]) (Dict.empty) 25
+  , Resource "podcast" "Machine Learning Guide" "http://ocdevel.com/podcasts/machine-learning" "ocdevel" "" (Set.fromList [ "entertaining", "downloadable", "audio" ]) (Dict.empty) 18
   , Resource "podcast episode" "Machine Learning Guide - 1. Introduction" "http://ocdevel.com/podcasts/machine-learning/1" "ocdevel" "" (Set.fromList [ "entertaining", "downloadable", "audio" ]) (Dict.empty) 0.2
   , Resource "podcast episode" "Machine Learning Guide - 2. What is AI / ML" "http://ocdevel.com/podcasts/machine-learning/2" "ocdevel" "" (Set.fromList [ "entertaining", "downloadable", "audio" ]) (Dict.empty) 0.5
   ]

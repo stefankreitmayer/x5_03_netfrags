@@ -366,7 +366,7 @@ renderCompletedItemsSection : Model -> Element MyStyles Variation Msg
 renderCompletedItemsSection model =
   let
       items = model.completedItems |> excludeDislikedItems model
-      heading = headingCompletedItems
+      heading = headingCompletedItems ++ (List.length items |> toString) ++ " item" ++ (if List.length items == 1 then "" else "s") ++ " - approx. " ++ (items |> List.map .workload |> List.sum |> workloadDisplayText)
   in
       column CompletedItemsSectionStyle ([ padding 20 ] ++ (if List.isEmpty items then [ hidden ] else []))
         [ el CompletedItemsHeadingStyle [] (text heading)
@@ -738,6 +738,6 @@ onClickStopPropagation message =
 renderItemDateAndTypeAndWorkload model item =
   row NoStyle [ width fill ]
     [ text (item.mediaType |> capitalize) |> el HintStyle [ width fill ]
-    , text (workloadDisplayText item) |> el HintStyle [ width fill ]
+    , text (workloadDisplayText item.workload) |> el HintStyle [ width fill ]
     , text item.date |> el HintStyle [ width fill ]
     ]

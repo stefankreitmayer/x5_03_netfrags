@@ -14,9 +14,9 @@ type alias Resource =
   , workload : Float }
 
 
-workloadDisplayText {workload} =
+workloadDisplayText hours =
   let
-      minutes = workload * 60
+      minutes = hours * 60
   in
       if minutes < 20 then
         (minutes |> ceiling |> toString) ++ "min"
@@ -29,7 +29,7 @@ workloadDisplayText {workload} =
       else if minutes < 105 then
         "1.5h"
       else
-        (workload |> round |> toString) ++ "h"
+        (hours |> round |> toString) ++ "h"
 
 
 isItemOptional model resource =
