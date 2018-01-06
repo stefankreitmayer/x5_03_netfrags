@@ -68,7 +68,6 @@ type MyStyles
   | GreetingSectionStyle
   | GreetingHeadingStyle
   | InspectedRatingsHeadingStyle
-  | ItemInspectorProgressStyle
   | WhiteButtonStyle
   | BlueButtonStyle
   | AgreeButtonStyle
@@ -224,12 +223,6 @@ stylesheet =
       [ Color.text <| Color.white
       , Font.size 32
       , Style.opacity 0.8
-      ]
-    , Style.style ItemInspectorProgressStyle
-      [ Color.border <| gray180
-      -- , Color.background <| gray230
-      -- , Border.top 1
-      , Border.bottom 1
       ]
     , Style.style InspectedRatingsHeadingStyle
       [ Color.text <| gray50
@@ -521,10 +514,10 @@ renderInspectedItem model item =
           embeddedYoutubePlayer item.url
         else
           decorativeImage ItemInspectorImageStyle [ width (px 400), maxHeight (px 212) ] { src = "images/resource_covers/" ++ item.coverImageStub ++ ".png" }
-          |> el NoStyle [ minHeight (px 212) ]
+          |> el NoStyle [ width fill, minHeight (px 212) ]
       startButton =
         if isStarted then
-          el HintStyle [ padding 10 ] (text "Started")
+          el HintStyle [ padding 10, center ] (text "Started")
         else if item |> isItemCompleted model then
           el HintStyle [ hidden ] (text "")
         else
@@ -537,17 +530,16 @@ renderInspectedItem model item =
       dislikeButton =
         button WhiteButtonStyle [ onClick (DislikeItem item), paddingXY 12 10 ] (text "Remove")
       actionButtons =
-        row ItemInspectorProgressStyle [ paddingTop 5, paddingBottom 15, spacing 10 ] [ startButton, completeButton, dislikeButton ]
-      tooEasyButton =
-        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "Too easy for me")
-      tooDifficultButton =
-        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I could use some help with this")
-      adjournButton =
-        button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I'll get back to this later")
-      difficultyButtons =
-        row NoStyle [ paddingTop 5, paddingBottom 0, spacing 10 ] [ tooEasyButton, tooDifficultButton, adjournButton ]
+        [ startButton
+        , completeButton
+        , button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "I need help here")
+        , button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "Too easy for me")
+        , button WhiteButtonStyle [ onClick UnimplementedAction, paddingXY 12 10 ] (text "Recap in a week")
+        , dislikeButton ]
+        |> column NoStyle [ paddingLeft 15, spacing 3, width fill ]
+        |> el NoStyle []
       myNotes =
-        [ h3 InspectedRatingsHeadingStyle [] (text "Your notes")
+        [ h3 InspectedRatingsHeadingStyle [ paddingTop 10 ] (text "Your notes")
         , Input.multiline MultilineInputStyle [ padding 3 ]
             { onChange = ChangeMyNotes item
             , value = model.myNotesForItems |> Dict.get item.url |> Maybe.withDefault ""
@@ -560,16 +552,14 @@ renderInspectedItem model item =
         [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model item ratingsFromUsers ]
         , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons item ]
         ]
-        |> table NoStyle [ width fill, paddingTop 3, spacingXY 2 50 ]
+        |> table NoStyle [ width fill, paddingTop 20, spacingXY 2 80 ]
       content =
         column NoStyle [ spacing 10, width fill ]
           [ h3 ResourceTitleStyle [] ( text item.title )
-          , image
+          , row NoStyle [] [ image, actionButtons ]
           , renderItemDateAndTypeAndWorkload model item
           -- , el HintStyle ([ width fill ] ++ (if item.date == "" then [ hidden ] else [])) (text item.date)
           , renderItemDetails model item
-          , actionButtons
-          , difficultyButtons
           , ratingsAndRationale
           , myNotes
           ]
@@ -708,7 +698,7 @@ renderReasonOptionForHidingItem reason =
   |> el NoStyle []
 
 
-inspectorWidth = 600
+inspectorWidth = 740
 
 
 embeddedYoutubePlayer url =
