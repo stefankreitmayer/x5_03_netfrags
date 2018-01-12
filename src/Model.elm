@@ -85,8 +85,12 @@ initialPlaylists resources =
   , generatePlaylistFromMediaType resources "Articles" "article"
   , generatePlaylistFromMediaType resources "Meetups" "meetup group"
   , generatePlaylistFromMediaType resources "Presentations" "presentation"
-  , generatePlaylistFromMediaType resources "Related to python" "python"
+  , generatePlaylistFromTags resources "Related to python" "python"
   ]
+
+
+generatePlaylistFromTags items heading tag =
+  Playlist heading (items |> List.filter (\item -> item.tags |> Set.member tag))
 
 
 generatePlaylistFromMediaType items heading mediaType =
