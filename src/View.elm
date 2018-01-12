@@ -20,6 +20,7 @@ import Style.Color as Color
 import Style.Font as Font
 import Style.Border as Border
 import Style.Shadow as Shadow
+import Style.Background as Background
 
 import Model exposing (..)
 import Model.Ui exposing (..)
@@ -218,6 +219,7 @@ stylesheet =
       ]
     , Style.style GreetingSectionStyle
       [ Color.background <| Color.rgb 93 135 172
+      , Background.coverImage "images/bg8.jpg"
       ]
     , Style.style GreetingHeadingStyle
       [ Color.text <| Color.white
@@ -324,7 +326,7 @@ renderPageBody model =
 
 
 renderGreetingSection model =
-  el GreetingHeadingStyle [ verticalCenter, center ] (text "Welcome back, Yvonne")
+  el GreetingHeadingStyle [ verticalCenter, center ] (text "Welcome back, Stefan")
   |> el GreetingSectionStyle [ height (model.windowHeight - 370 |> toFloat |> px) ]
 
 
