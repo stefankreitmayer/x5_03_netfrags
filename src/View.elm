@@ -552,7 +552,7 @@ renderInspectedItem model item =
         |> column NoStyle []
       ratingsAndRationale =
         [ [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What other users said"), renderRatingsColumn model item ratingsFromUsers ]
-        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "What the x5gon algorithm thought"), renderRecommendationReasons item ]
+        , [ h3 InspectedRatingsHeadingStyle [ paddingBottom 2 ] (text "Why our system recommended this item to you"), renderRecommendationReasons item ]
         ]
         |> table NoStyle [ width fill, paddingTop 20, spacingXY 2 80 ]
       content =

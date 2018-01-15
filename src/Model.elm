@@ -85,7 +85,7 @@ initialPlaylists resources =
   , generatePlaylistFromMediaType resources "Articles" "article"
   , generatePlaylistFromMediaType resources "Meetups" "meetup group"
   , generatePlaylistFromMediaType resources "Presentations" "presentation"
-  , generatePlaylistFromTags resources "Related to python" "python"
+  , generatePlaylistFromTags resources "Because you are learning python" "python"
   ]
 
 
